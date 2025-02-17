@@ -11,13 +11,13 @@
 
 #include "taco-bench.h"
 // Includes for all the products
-#include "eigen-bench.h"
-#include "ublas-bench.h"
-#include "gmm-bench.h"
-#include "mkl-bench.h"
-#include "poski-bench.h"
-#include "oski-bench.h"
-#include "your-bench.h"
+// #include "eigen-bench.h"
+//#include "ublas-bench.h"
+// #include "gmm-bench.h"
+// #include "mkl-bench.h"
+// #include "poski-bench.h"
+// #include "oski-bench.h"
+// #include "your-bench.h"
 
 using namespace taco;
 using namespace std;
@@ -283,7 +283,7 @@ int main(int argc, char* argv[]) {
       D.setName("D");
       IndexVar i, j;
       ARef(i,j) = B(i,j) + C(i,j) + D(i,j);
-      ARef.compile(true);
+      ARef.compile();
       ARef.assemble();
       ARef.compute();
 
@@ -301,7 +301,7 @@ int main(int argc, char* argv[]) {
 
         A(i,j) = B(i,j) + C(i,j) + D(i,j);
 
-        TACO_BENCH(A.compile(true);, "Compile",1,timevalue,false)
+        TACO_BENCH(A.compile();, "Compile",1,timevalue,false)
         TACO_BENCH(A.assemble();,"Assemble",1,timevalue,false)
         TACO_BENCH(A.compute();, "Compute",repeat, timevalue, true)
 
@@ -416,7 +416,7 @@ int main(int argc, char* argv[]) {
         cout << endl << "y(i) = alpha*A(i,j)*x(j) + beta*z(i) -- " << formats.first << " -- DENSE" << endl;
         Tensor<double> B({rows,cols},formats.second);
         for (auto& value : iterate<double>(A)) {
-          B.insert({value.first.at(0),value.first.at(1)},value.second);
+          B.insert({value.first[0],value.first[1]},value.second);
         }
         B.pack();
         Tensor<double> y({rows}, Dense);
@@ -441,7 +441,7 @@ int main(int argc, char* argv[]) {
           }
           else {
             for (auto& value : iterate<double>(B)) {
-              Btmp.insert({value.first.at(0),value.first.at(1)},value.second);
+              Btmp.insert({value.first[0],value.first[1]},value.second);
             }
             Btmp.pack();
           }
@@ -488,7 +488,7 @@ int main(int argc, char* argv[]) {
         cout << endl << "A(i,j) = B(i,j,k)*x(k) -- " << formats.first << " -- DENSE" << endl;
         Tensor<double> Btmp({dim1,dim2,dim3},formats.second);
         for (auto& value : iterate<double>(B)) {
-          Btmp.insert({value.first.at(0),value.first.at(1),value.first.at(2)},value.second);
+          Btmp.insert({value.first[0],value.first[1],value.first[2]},value.second);
         }
         Btmp.pack();
         Tensor<double> A({dim1,dim2}, Format({Dense,Dense}));
@@ -514,7 +514,7 @@ int main(int argc, char* argv[]) {
           }
           else {
             for (auto& value : iterate<double>(Bgen)) {
-              Btmp.insert({value.first.at(0),value.first.at(1),value.first.at(2)},value.second);
+              Btmp.insert({value.first[0],value.first[1],value.first[2]},value.second);
             }
             Btmp.pack();
           }
@@ -554,7 +554,7 @@ int main(int argc, char* argv[]) {
         cout << endl << "C(i, j) = A(i, k) * B(k, j) -- " << formats.first << " -- DENSE" << endl;
         Tensor<double> A2({rows,cols},formats.second);
         for (auto& value : iterate<double>(A)) {
-          A2.insert({value.first.at(0),value.first.at(1)},value.second);
+          A2.insert({value.first[0],value.first[1]},value.second);
         }
         A2.pack();
         Tensor<double> C({rows,cols}, Format({Dense,Dense}));
@@ -579,7 +579,7 @@ int main(int argc, char* argv[]) {
           }
           else {
             for (auto& value : iterate<double>(A2)) {
-              A2tmp.insert({value.first.at(0),value.first.at(1)},value.second);
+              A2tmp.insert({value.first[0],value.first[1]},value.second);
             }
             A2tmp.pack();
           }

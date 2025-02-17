@@ -29,7 +29,7 @@ bool compare(const Tensor<double>&Dst, const Tensor<double>&Ref) {
 
   std::set<std::vector<int>> coords;
   for (const auto& val : Dst) {
-    if (!coords.insert(val.first).second) {
+    if (!coords.insert(val.first.toVector()).second) {
       return false;
     }
   }
@@ -37,14 +37,14 @@ bool compare(const Tensor<double>&Dst, const Tensor<double>&Ref) {
   vector<std::pair<std::vector<int>,double>> valsDst;
   for (const auto& val : Dst) {
     if (val.second != 0) {
-      valsDst.push_back(val);
+      valsDst.push_back(make_pair(val.first.toVector(),val.second));
     }
   }
 
   vector<std::pair<std::vector<int>,double>> valsRef;
   for (const auto& val : Ref) {
     if (val.second != 0) {
-      valsRef.push_back(val);
+      valsRef.push_back(make_pair(val.first.toVector(),val.second));
     }
   }
   std::sort(valsRef.begin(), valsRef.end());
