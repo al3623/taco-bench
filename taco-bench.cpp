@@ -17,7 +17,7 @@
 // #include "mkl-bench.h"
 // #include "poski-bench.h"
 // #include "oski-bench.h"
-// #include "your-bench.h"
+#include "your-bench.h"
 
 using namespace taco;
 using namespace std;
@@ -114,6 +114,10 @@ int main(int argc, char* argv[]) {
   int Expression=1;
   BenchExpr Expr;
   map<string,Tensor<double>> exprOperands;
+  map<string,vector<Tensor<double>>> ATLOperands;
+  ATLOperands["A"] = vector<Tensor<double>>();
+  ATLOperands["x"] = vector<Tensor<double>>();
+  ATLOperands["yRef"] = vector<Tensor<double>>();
   int repeat=1;
   int size = 100;
   map<string,string> inputFilenames;
@@ -125,7 +129,7 @@ int main(int argc, char* argv[]) {
   products.insert({"OSKI",true});
   products.insert({"POSKI",true});
   products.insert({"MKL",true});
-  products.insert({"YOURS",true});
+  products.insert({"YOUR",true});
 
   if (argc < 2)
     return reportError("no arguments", 3);
@@ -227,8 +231,8 @@ int main(int argc, char* argv[]) {
 #ifndef OSKI
   CHECK_PRODUCT("OSKI");
 #endif
-#ifndef YOURS
-  CHECK_PRODUCT("YOURS");
+#ifndef YOUR
+  CHECK_PRODUCT("YOUR");
 #endif
 
   // taco Formats and sparsities
@@ -242,6 +246,7 @@ int main(int argc, char* argv[]) {
       readMatrixSize(inputFilenames.at("A"),rows,cols);
       Tensor<double> x({cols}, Dense);
       util::fillTensor(x,util::FillMethod::Dense);
+	  ATLOperands["x"].push_back(x);
       Tensor<double> yRef({rows}, Dense);
       Tensor<double> A=read(inputFilenames.at("A"),CSR,true);
       IndexVar i, j;
@@ -252,10 +257,13 @@ int main(int argc, char* argv[]) {
 
       TacoFormats.insert({"CSR",CSR});
       TacoFormats.insert({"CSC",CSC});
-      TacoFormats.insert({"Sparse,Sparse",Format({Sparse,Sparse})});
+      TacoFormats.insert({"DCSR",DCSR});
+      TacoFormats.insert({"DCSC",DCSC});
+      // TacoFormats.insert({"Sparse,Sparse",Format({Sparse,Sparse})});
       for (auto& formats:TacoFormats) {
         cout << endl << "y(i) = A(i,j)*x(j) -- " << formats.first <<endl;
         Tensor<double> A=read(inputFilenames.at("A"),formats.second,true);
+	  	ATLOperands["A"].push_back(A);
         Tensor<double> y({rows}, Dense);
 
         y(i) = A(i,j) * x(j);
@@ -269,6 +277,7 @@ int main(int argc, char* argv[]) {
       exprOperands.insert({"yRef",yRef});
       exprOperands.insert({"A",A});
       exprOperands.insert({"x",x});
+	  ATLOperands["yRef"].push_back(yRef);
       break;
     }
     case PLUS3: {
@@ -289,6 +298,8 @@ int main(int argc, char* argv[]) {
 
       TacoFormats.insert({"CSR",CSR});
       TacoFormats.insert({"CSC",CSC});
+      TacoFormats.insert({"DCSR",DCSR});
+      TacoFormats.insert({"DCSC",DCSC});
       for (auto& formats:TacoFormats) {
         cout << endl << "A(i,j) = B(i,j) + C(i,j) + D(i,j) -- " << formats.first <<endl;
         B=read(inputFilenames.at("B"),formats.second,true);
@@ -632,9 +643,9 @@ int main(int argc, char* argv[]) {
     exprToOSKI(Expr,exprOperands,repeat,timevalue);
   }
 #endif
-#ifdef YOURS
-  if (products.at("YOURS")) {
-    exprToYOURS(Expr,exprOperands,repeat,timevalue);
+#ifdef YOUR
+  if (products.at("YOUR")) {
+    exprToYOUR(Expr,ATLOperands,repeat,timevalue);
   }
 #endif
 }

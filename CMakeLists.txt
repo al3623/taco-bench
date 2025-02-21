@@ -5,6 +5,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math -std=c++11")
 file(GLOB SOURCE_CODE ${PROJECT_SOURCE_DIR}/*.cpp)
 file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/*.h)
 add_executable(${PROJECT_NAME} ${SOURCE_CODE} ${HEADERS})
+set(YOUR_INCLUDE_DIR "/home/lamanda/atl/src/slib")
+set(YOUR_LIBRARY_DIR "/home/lamanda/atl/src/slib")
+set(YOUR "/home/lamanda/atl/src/slib")
 
 # To find taco
 if (NOT DEFINED ENV{TACO_INCLUDE_DIR} OR NOT DEFINED ENV{TACO_LIBRARY_DIR})
@@ -13,7 +16,7 @@ endif ()
 set(TACO_INCLUDE_DIR $ENV{TACO_INCLUDE_DIR})
 set(TACO_LIBRARY_DIR $ENV{TACO_LIBRARY_DIR})
 find_library(taco taco ${TACO_LIBRARY_DIR})
-target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${taco})
+target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${taco} -L${YOUR_LIBRARY_DIR} -lsparse)
 
 # Include taco headers
 include_directories(${TACO_INCLUDE_DIR})
@@ -82,6 +85,9 @@ if ((NOT DEFINED ENV{YOUR_INCLUDE_DIR}) OR (NOT DEFINED ENV{YOUR_LIBRARY_DIR}))
   message(WARNING "Your not found and will not be used")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYOUR ")
+  include_directories(${YOUR_INCLUDE_DIR})
+  # link_directories(${YOUR_LIBRARY_DIR})
+  # target_link_libraries(${PROJECT_NAME} "${YOUR_LIBRARY_DIR}/libsparse.a")
 # Add here dependencies to your library/code
 # ...
 endif ()
@@ -89,3 +95,4 @@ endif ()
 
 
    
+
