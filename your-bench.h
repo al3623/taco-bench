@@ -35,13 +35,13 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 	double *vvals = (double *)vstruct.vals;
 	int vdim0 = vstruct.dimensions[0];
 
-	vector<Tensor<double>> ms = exprOperands.at("A"); 
+	/*for (int i = 0; i < 3; i ++) {
+		fprintf(stderr, "%f,", ((double *)((*(out.getStorage())).vals))[i]);
+	}*/
+	vector<Tensor<double>> ms = exprOperands.at("A");
 	for (Tensor<double> m : ms) {
 		Tensor<double> v = exprOperands.at("x")[0];
 
-		/*for (int i = 0; i < 3; i++) {
-			fprintf(stderr,"%f,",vvals[i]);
-		}*/
 		if (m.getFormat()==CSR) {
 			TensorStorage mstor = m.getStorage();
 			struct taco_tensor_t mstruct = *mstor;
@@ -51,8 +51,8 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			int *crd = (int *)mstruct.indices[1][1];
 			double *data = (double *)mstruct.vals;
 			
-			double *output = (double *) malloc(vdim0 * sizeof(double));
-			TACO_BENCH(SpMCSR(vvals,data,crd,pos,vdim0,output);, 
+			double *output = (double *) calloc(mdim0, sizeof(double));
+			TACO_BENCH(SpMCSR(vvals,data,crd,pos,mdim0,output);, 
 								"\nATL CSR",repeat,timevalue,true)
 			/*for (int i = 0; i < 12; i++) {
 				fprintf(stderr,"%f,",data[i]);
@@ -70,7 +70,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			int *crd = (int *)mstruct.indices[1][1];
 			double *data = (double *)mstruct.vals;
 			
-			double *output = (double *) malloc(vdim0 * sizeof(double));
+			double *output = (double *) calloc(vdim0,sizeof(double));
 			TACO_BENCH(SpMCSC(vvals,data,pos,crd,mdim0,mdim1,output);, 
 								"\nATL CSC",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
@@ -91,15 +91,14 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			
 			double *data = (double *)mstruct.vals;
 			
-			double *output = (double *) malloc(vdim0 * sizeof(double));
-			TACO_BENCH(SpMVDCSR(vvals,data,pos0,pos1,crd1,crd0,mdim0,mdim1,output);, 
+			double *output = (double *) calloc(vdim0, sizeof(double));
+			TACO_BENCH(SpMVDCSR(vvals,data,pos0,pos1,crd0,crd1,mdim0,mdim1,output);, 
 								"\nATL DCSR",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
 			free(output);
 			
 		}
 		if (m.getFormat()==DCSC) {
-			fprintf(stderr,"\nTODO: DCSC");
 		}
 	}
 }
