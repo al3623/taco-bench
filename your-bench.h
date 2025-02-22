@@ -9,6 +9,7 @@ extern "C" {
 	#include "SpMCSR.h"
 	#include "SpMCSC.h"
 	#include "SpMVDCSR.h"
+	#include "SpMDCSC.h"
 }
  
 void myValidate(Tensor<double> t, double *t2, int n) {
@@ -99,6 +100,25 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			
 		}
 		if (m.getFormat()==DCSC) {
+			TensorStorage mstor = m.getStorage();
+			struct taco_tensor_t mstruct = *mstor;
+
+			int mdim0 = mstruct.dimensions[0];
+			int mdim1 = mstruct.dimensions[1];
+
+			int *pos0 = (int *)mstruct.indices[0][0];
+			int *crd0 = (int *)mstruct.indices[0][1];
+			
+			int *pos1 = (int *)mstruct.indices[1][0];
+			int *crd1 = (int *)mstruct.indices[1][1];
+			
+			double *data = (double *)mstruct.vals;
+			
+			double *output = (double *) calloc(vdim0, sizeof(double));
+			TACO_BENCH(SpMDCSC(vvals,data,pos0,pos1,crd0,crd1,mdim0,output);, 
+								"\nATL DCSC",repeat,timevalue,true)
+			myValidate(out,output,vdim0);
+			free(output);
 		}
 	}
 }
