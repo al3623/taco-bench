@@ -10,6 +10,8 @@ extern "C" {
 	#include "SpMCSC.h"
 	#include "SpMVDCSR.h"
 	#include "SpMDCSC.h"
+	#include "SpMCOO.h"
+	#include "SpMBCSR.h"
 }
  
 void myValidate(Tensor<double> t, double *t2, int n) {
