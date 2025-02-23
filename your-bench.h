@@ -140,7 +140,53 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 								"\nATL COO",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
 			free(output);
-		}	
+		}
+
+		if (isDense(m.getFormat())) {
+			// let's try BCSR
+			int blockSize1 = 32;
+			int blockSize2 = 32;
+			int rows= m.getDimension(0);
+			int cols= m.getDimension(1);
+			
+			// Tile the input matrix
+			Tensor<double> Ab(
+							{rows/blockSize1,cols/blockSize2,blockSize1,blockSize2},
+							Format({Dense,Sparse,Dense,Dense}));
+
+
+			for (auto& value : iterate<double>(m)) {
+				Ab.insert({value.first[0]/blockSize1
+								, value.first[1]/blockSize2
+								, value.first[0]%blockSize1
+								, value.first[1]%blockSize2}
+								, value.second);
+			}
+  			Ab.pack();
+			
+			TensorStorage mstor = Ab.getStorage();
+			struct taco_tensor_t mstruct = *mstor;
+
+			int mdim0 = mstruct.dimensions[0];
+			int mdim1 = mstruct.dimensions[1];
+			int mdim2 = mstruct.dimensions[2];
+			int mdim3 = mstruct.dimensions[3];
+
+			fprintf(stderr,"order: %d %d %d %d\n", mdim0,mdim1,mdim2,mdim3);
+			
+			int *pos = (int *)mstruct.indices[1][0];
+			int *crd = (int *)mstruct.indices[1][1];
+			double *data = (double *)mstruct.vals;
+			
+			double *output = (double *) calloc(vdim0, sizeof(double));
+			
+			TACO_BENCH(SpMBCSR(data,vvals,crd,pos,rows,cols,blockSize1,blockSize2,output);, 
+								"\nATL BCSR",repeat,timevalue,true) 
+			myValidate(out,output,vdim0);
+
+			free(output);
+			
+		}
 	}
 }
 
