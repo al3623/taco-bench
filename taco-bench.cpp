@@ -259,6 +259,7 @@ int main(int argc, char* argv[]) {
       TacoFormats.insert({"CSC",CSC});
       TacoFormats.insert({"DCSR",DCSR});
       TacoFormats.insert({"DCSC",DCSC});
+      TacoFormats.insert({"COO",COO(2)});
       // TacoFormats.insert({"Sparse,Sparse",Format({Sparse,Sparse})});
       for (auto& formats:TacoFormats) {
         cout << endl << "y(i) = A(i,j)*x(j) -- " << formats.first <<endl;
@@ -300,6 +301,7 @@ int main(int argc, char* argv[]) {
       TacoFormats.insert({"CSC",CSC});
       TacoFormats.insert({"DCSR",DCSR});
       TacoFormats.insert({"DCSC",DCSC});
+      TacoFormats.insert({"COO",COO(2)});
       for (auto& formats:TacoFormats) {
         cout << endl << "A(i,j) = B(i,j) + C(i,j) + D(i,j) -- " << formats.first <<endl;
         B=read(inputFilenames.at("B"),formats.second,true);

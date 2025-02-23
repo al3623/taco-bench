@@ -122,6 +122,25 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			myValidate(out,output,vdim0);
 			free(output);
 		}
+		if (m.getFormat() == COO(2)) {
+			TensorStorage mstor = m.getStorage();
+			struct taco_tensor_t mstruct = *mstor;
+
+			int mdim0 = mstruct.dimensions[0];
+			int mdim1 = mstruct.dimensions[1];
+
+			int *pos = (int *)mstruct.indices[0][0];
+			int *crd0 = (int *)mstruct.indices[0][1];
+			int *crd1 = (int *)mstruct.indices[1][1];
+			
+			double *data = (double *)mstruct.vals;
+			
+			double *output = (double *) calloc(vdim0, sizeof(double));
+			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);, 
+								"\nATL COO",repeat,timevalue,true)
+			myValidate(out,output,vdim0);
+			free(output);
+		}	
 	}
 }
 
