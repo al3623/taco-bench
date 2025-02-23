@@ -24,7 +24,7 @@ void myValidate(Tensor<double> t, double *t2, int n) {
 		}	
 	}	
 	if (success) {
-		fprintf(stderr,"success!\n");
+		// fprintf(stderr,"success!\n");
 	}
 }
 
@@ -172,8 +172,6 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			int mdim2 = mstruct.dimensions[2];
 			int mdim3 = mstruct.dimensions[3];
 
-			fprintf(stderr,"order: %d %d %d %d\n", mdim0,mdim1,mdim2,mdim3);
-			
 			int *pos = (int *)mstruct.indices[1][0];
 			int *crd = (int *)mstruct.indices[1][1];
 			double *data = (double *)mstruct.vals;

@@ -270,8 +270,10 @@ int main(int argc, char* argv[]) {
 
         y(i) = A(i,j) * x(j);
 
-        TACO_BENCH(y.compile();, "Compile",1,timevalue,false)
-        TACO_BENCH(y.assemble();,"Assemble",1,timevalue,false)
+        // TACO_BENCH(y.compile();, "Compile",1,timevalue,false)
+        // TACO_BENCH(y.assemble();,"Assemble",1,timevalue,false)
+		y.compile();
+		y.assemble();
         TACO_BENCH(y.compute();, "Compute",repeat, timevalue, true)
 
         validate("taco", y, yRef);
