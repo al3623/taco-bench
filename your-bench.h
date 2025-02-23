@@ -56,7 +56,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			
 			double *output = (double *) calloc(mdim0, sizeof(double));
 			TACO_BENCH(SpMCSR(vvals,data,crd,pos,mdim0,output);, 
-								"\nATL CSR",repeat,timevalue,true)
+								"ATL CSR",repeat,timevalue,true)
 			/*for (int i = 0; i < 12; i++) {
 				fprintf(stderr,"%f,",data[i]);
 			}*/
@@ -75,7 +75,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			
 			double *output = (double *) calloc(vdim0,sizeof(double));
 			TACO_BENCH(SpMCSC(vvals,data,pos,crd,mdim0,mdim1,output);, 
-								"\nATL CSC",repeat,timevalue,true)
+								"ATL CSC",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
 			free(output);
 		}
@@ -96,7 +96,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			
 			double *output = (double *) calloc(vdim0, sizeof(double));
 			TACO_BENCH(SpMVDCSR(vvals,data,pos0,pos1,crd0,crd1,mdim0,mdim1,output);, 
-								"\nATL DCSR",repeat,timevalue,true)
+								"ATL DCSR",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
 			free(output);
 			
@@ -118,7 +118,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			
 			double *output = (double *) calloc(vdim0, sizeof(double));
 			TACO_BENCH(SpMDCSC(vvals,data,pos0,pos1,crd0,crd1,mdim0,output);, 
-								"\nATL DCSC",repeat,timevalue,true)
+								"ATL DCSC",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
 			free(output);
 		}
@@ -137,7 +137,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			
 			double *output = (double *) calloc(vdim0, sizeof(double));
 			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);, 
-								"\nATL COO",repeat,timevalue,true)
+								"ATL COO",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
 			free(output);
 		}
@@ -179,7 +179,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			double *output = (double *) calloc(vdim0, sizeof(double));
 			
 			TACO_BENCH(SpMBCSR(data,vvals,crd,pos,rows,cols,blockSize1,blockSize2,output);, 
-								"\nATL BCSR",repeat,timevalue,true) 
+								"ATL BCSR",repeat,timevalue,true) 
 			myValidate(out,output,vdim0);
 
 			free(output);

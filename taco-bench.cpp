@@ -214,22 +214,22 @@ int main(int argc, char* argv[]) {
 
   // Check products
 #ifndef EIGEN
-  CHECK_PRODUCT("EIGEN");
+  // CHECK_PRODUCT("EIGEN");
 #endif
 #ifndef UBLAS
-  CHECK_PRODUCT("UBLAS");
+  // CHECK_PRODUCT("UBLAS");
 #endif
 #ifndef GMM
-  CHECK_PRODUCT("GMM");
+  // CHECK_PRODUCT("GMM");
 #endif
 #ifndef MKL
-  CHECK_PRODUCT("MKL");
+  // CHECK_PRODUCT("MKL");
 #endif
 #ifndef POSKI
-  CHECK_PRODUCT("POSKI");
+  // CHECK_PRODUCT("POSKI");
 #endif
 #ifndef OSKI
-  CHECK_PRODUCT("OSKI");
+  // CHECK_PRODUCT("OSKI");
 #endif
 #ifndef YOUR
   CHECK_PRODUCT("YOUR");
@@ -263,7 +263,7 @@ int main(int argc, char* argv[]) {
       TacoFormats.insert({"Dense",{Dense,Dense}});
       // TacoFormats.insert({"Sparse,Sparse",Format({Sparse,Sparse})});
       for (auto& formats:TacoFormats) {
-        cout << endl << "y(i) = A(i,j)*x(j) -- " << formats.first <<endl;
+        // cout << endl << "y(i) = A(i,j)*x(j) -- " << formats.first <<endl;
         Tensor<double> A=read(inputFilenames.at("A"),formats.second,true);
 	  	ATLOperands["A"].push_back(A);
         Tensor<double> y({rows}, Dense);
@@ -274,14 +274,14 @@ int main(int argc, char* argv[]) {
         // TACO_BENCH(y.assemble();,"Assemble",1,timevalue,false)
 		y.compile();
 		y.assemble();
-        TACO_BENCH(y.compute();, "Compute",repeat, timevalue, true)
+        TACO_BENCH(y.compute();, formats.first,repeat, timevalue, true)
 
         validate("taco", y, yRef);
       }
 
 
 	  { // Just do BCSR
-			cout << endl << "y(jo,ji) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
+			// cout << endl << "y(jo,ji) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
         	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Dense},true);
 			int blockSize1 = 32;
 			int blockSize2 = 32;
@@ -313,7 +313,7 @@ int main(int argc, char* argv[]) {
 			y(jo,ji) = Ab(io,jo,ii,ji) * xb(jo,ji);
 			y.compile();
 			y.assemble();
-        	TACO_BENCH(y.compute();, "Compute",repeat, timevalue, true)
+        	TACO_BENCH(y.compute();, "BCSR",repeat, timevalue, true)
 			
 	  }
       exprOperands.insert({"yRef",yRef});
