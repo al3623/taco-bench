@@ -260,7 +260,7 @@ int main(int argc, char* argv[]) {
       TacoFormats.insert({"DCSR",DCSR});
       TacoFormats.insert({"DCSC",DCSC});
       TacoFormats.insert({"COO",COO(2)});
-      TacoFormats.insert({"BCSR",{Dense,Dense}});
+      TacoFormats.insert({"Dense",{Dense,Dense}});
       // TacoFormats.insert({"Sparse,Sparse",Format({Sparse,Sparse})});
       for (auto& formats:TacoFormats) {
         cout << endl << "y(i) = A(i,j)*x(j) -- " << formats.first <<endl;
@@ -276,6 +276,44 @@ int main(int argc, char* argv[]) {
 
         validate("taco", y, yRef);
       }
+
+
+	  { // Just do BCSR
+			cout << endl << "y(jo,ji) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
+        	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Dense},true);
+			int blockSize1 = 32;
+			int blockSize2 = 32;
+			int rows = A.getDimension(0);
+			int cols = A.getDimension(1);
+
+			Tensor<double>Ab({rows/blockSize1,cols/blockSize2,blockSize1,blockSize2}
+							,Format({Dense,Sparse,Dense,Dense}));
+			for (auto& value : iterate<double>(A)) {
+				Ab.insert({value.first[0]/blockSize1
+							   , value.first[1]/blockSize2
+							   , value.first[0]%blockSize1
+							   , value.first[1]%blockSize2}
+								, value.second);
+			}
+			Ab.pack();
+
+			Tensor<double>xb({x.getDimension(0)/blockSize2,blockSize2}
+							,Format({Dense,Dense}));
+			for (auto& value : iterate<double>(x)) {
+				xb.insert({value.first[0]/blockSize2,value.first[0]%blockSize2}
+								, value.second);
+			}
+			xb.pack();
+
+      		Tensor<double> y({x.getDimension(0)/blockSize2,blockSize2}
+							, Format({Dense,Dense}));
+      		IndexVar io, ii, jo, ji;
+			y(jo,ji) = Ab(io,jo,ii,ji) * xb(jo,ji);
+			y.compile();
+			y.assemble();
+        	TACO_BENCH(y.compute();, "Compute",repeat, timevalue, true)
+			
+	  }
       exprOperands.insert({"yRef",yRef});
       exprOperands.insert({"A",A});
       exprOperands.insert({"x",x});
