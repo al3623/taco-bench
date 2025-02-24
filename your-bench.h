@@ -12,8 +12,26 @@ extern "C" {
 	#include "SpMDCSC.h"
 	#include "SpMCOO.h"
 	#include "SpMBCSR.h"
+	#include "MV.h"
 }
- 
+
+#define ATL_TIME_REPEAT(SETUP, CODE, TAKEDOWN, ONCE, REPEAT, RES, COLD) {  \
+    taco::util::Timer timer;                         \
+    for(int i=0; i<REPEAT; i++) {                    \
+      if(COLD)                                       \
+        timer.clear_cache();                         \
+      SETUP;                                 \
+      timer.start();                                 \
+      CODE;                                          \
+      timer.stop();                                  \
+	  if (i == 0) { \
+		ONCE; \
+	  } \
+      TAKEDOWN;                                  \
+    }                                                \
+    RES = timer.getResult();                         \
+  }
+
 void myValidate(Tensor<double> t, double *t2, int n) {
 	double *t1 = (double *) (*t.getStorage()).vals;
 	bool success = true;
@@ -53,15 +71,21 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			int *pos = (int *)mstruct.indices[1][0];
 			int *crd = (int *)mstruct.indices[1][1];
 			double *data = (double *)mstruct.vals;
+			double *output;
 			
-			double *output = (double *) calloc(mdim0, sizeof(double));
-			TACO_BENCH(SpMCSR(vvals,data,crd,pos,mdim0,output);, 
+			ATL_TIME_REPEAT(output = (double *) calloc(mdim0, sizeof(double))
+							, SpMCSR(vvals,data,crd,pos,mdim0,output)
+							, free(output)
+							, myValidate(out,output,vdim0)
+							, repeat, timevalue, true)
+			cout << "ATL CSR\n" << timevalue << endl;	
+			/*
+			output = (double *) calloc(vdim0,sizeof(double));
+			TACO_BENCH(SpMCSR(vvals,data,crd,pos,mdim0,output), 
 								"ATL CSR",repeat,timevalue,true)
-			/*for (int i = 0; i < 12; i++) {
-				fprintf(stderr,"%f,",data[i]);
-			}*/
 			myValidate(out,output,vdim0);
 			free(output);
+			*/
 		}
 		if (m.getFormat()==CSC) {
 			TensorStorage mstor = m.getStorage();
@@ -72,12 +96,21 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			int *pos = (int *)mstruct.indices[1][0];
 			int *crd = (int *)mstruct.indices[1][1];
 			double *data = (double *)mstruct.vals;
-			
-			double *output = (double *) calloc(vdim0,sizeof(double));
+			double *output;
+
+			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
+							, SpMCSC(vvals,data,pos,crd,mdim0,mdim1,output)
+							, free(output)
+							, myValidate(out,output,vdim0)
+							, repeat, timevalue, true)
+			cout << "ATL CSC\n" << timevalue << endl;	
+			/*
+			output = (double *) calloc(vdim0,sizeof(double));
 			TACO_BENCH(SpMCSC(vvals,data,pos,crd,mdim0,mdim1,output);, 
 								"ATL CSC",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
 			free(output);
+			*/
 		}
 		if (m.getFormat()==DCSR) {
 			TensorStorage mstor = m.getStorage();
@@ -93,13 +126,21 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			int *crd1 = (int *)mstruct.indices[1][1];
 			
 			double *data = (double *)mstruct.vals;
-			
-			double *output = (double *) calloc(vdim0, sizeof(double));
+			double *output;
+
+			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
+							,  SpMVDCSR(vvals,data,pos0,pos1,crd0,crd1,mdim0,mdim1,output)
+							, free(output)
+							, myValidate(out,output,vdim0)
+							, repeat, timevalue, true)
+			cout << "ATL DCSR\n" << timevalue << endl;
+			/*
+			output = (double *) calloc(vdim0, sizeof(double));
 			TACO_BENCH(SpMVDCSR(vvals,data,pos0,pos1,crd0,crd1,mdim0,mdim1,output);, 
 								"ATL DCSR",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
 			free(output);
-			
+			*/
 		}
 		if (m.getFormat()==DCSC) {
 			TensorStorage mstor = m.getStorage();
@@ -115,12 +156,21 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			int *crd1 = (int *)mstruct.indices[1][1];
 			
 			double *data = (double *)mstruct.vals;
-			
-			double *output = (double *) calloc(vdim0, sizeof(double));
+			double *output;
+
+			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
+							, SpMDCSC(vvals,data,pos0,pos1,crd0,crd1,mdim0,output)
+							, free(output)
+							, myValidate(out,output,vdim0)
+							, repeat, timevalue, true)
+			cout << "ATL DCSC\n" << timevalue << endl;
+			/*
+			output = (double *) calloc(vdim0, sizeof(double));
 			TACO_BENCH(SpMDCSC(vvals,data,pos0,pos1,crd0,crd1,mdim0,output);, 
 								"ATL DCSC",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
 			free(output);
+			*/
 		}
 		if (m.getFormat() == COO(2)) {
 			TensorStorage mstor = m.getStorage();
@@ -134,20 +184,43 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			int *crd1 = (int *)mstruct.indices[1][1];
 			
 			double *data = (double *)mstruct.vals;
+			double *output;
+
+			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
+							, SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output)
+							, free(output)
+							, myValidate(out,output,vdim0)
+							, repeat, timevalue, true)
+			cout << "ATL COO\n" << timevalue << endl;
 			
-			double *output = (double *) calloc(vdim0, sizeof(double));
+			/*
+			output = (double *) calloc(vdim0, sizeof(double));
 			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);, 
 								"ATL COO",repeat,timevalue,true)
 			myValidate(out,output,vdim0);
 			free(output);
+			*/
 		}
 
 		if (isDense(m.getFormat())) {
+
+			int rows= m.getDimension(0);
+			int cols= m.getDimension(1);
+			// dense case
+			/*
+			
+			TensorStorage mstord = m.getStorage();
+			struct taco_tensor_t mstructd = *mstord;
+			double *mm = (double *)mstructd.vals;
+
+			double *outputd = (double *) calloc(rows, sizeof(double));
+			TACO_BENCH(MV(mm,vvals,rows,cols,outputd);, "ATL Dense",repeat,timevalue,true)
+			free(outputd);
+			*/
+
 			// let's try BCSR
 			int blockSize1 = 32;
 			int blockSize2 = 32;
-			int rows= m.getDimension(0);
-			int cols= m.getDimension(1);
 			
 			// Tile the input matrix
 			Tensor<double> Ab(
@@ -175,15 +248,21 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			int *pos = (int *)mstruct.indices[1][0];
 			int *crd = (int *)mstruct.indices[1][1];
 			double *data = (double *)mstruct.vals;
-			
-			double *output = (double *) calloc(vdim0, sizeof(double));
-			
+			double *output;
+
+			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
+							,  SpMBCSR(data,vvals,crd,pos,rows,cols,blockSize1,blockSize2,output)
+							, free(output)
+							, myValidate(out,output,vdim0)
+							, repeat, timevalue, true)
+			cout << "ATL BCSR\n" << timevalue << endl;
+			/*
+			output = (double *) calloc(vdim0, sizeof(double));
 			TACO_BENCH(SpMBCSR(data,vvals,crd,pos,rows,cols,blockSize1,blockSize2,output);, 
 								"ATL BCSR",repeat,timevalue,true) 
 			myValidate(out,output,vdim0);
-
 			free(output);
-			
+			*/
 		}
 	}
 }
