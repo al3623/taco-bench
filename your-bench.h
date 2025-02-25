@@ -206,7 +206,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			*/
 		}
 
-		if (false) {
+		if (m.getFormat() == CSR) {
 		//if (isDense(m.getFormat())) {
 
 			int rows= m.getDimension(0);
@@ -226,7 +226,11 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			// let's try BCSR
 			int blockSize1 = 32;
 			int blockSize2 = 32;
-			
+
+			// Pad to the next multiple of blockSize1 and blockSize2 for the respective dimension
+			int rows = ((m.getDimension(0) + blockSize1 - 1) / blockSize1) * blockSize1;
+			int cols = ((m.getDimension(1) + blockSize2 - 1) / blockSize2) * blockSize2;
+
 			// Tile the input matrix
 			Tensor<double> Ab(
 							{rows/blockSize1,cols/blockSize2,blockSize1,blockSize2},
@@ -242,8 +246,16 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			}
   			Ab.pack();
 			
+			Tensor<double> xb({cols}, Format({Dense}));
+			for (auto& value : iterate<double>(v)) {
+				xb.insert({value.first[0]},value.second);
+			}
+			xb.pack();
+			
 			TensorStorage mstor = Ab.getStorage();
 			struct taco_tensor_t mstruct = *mstor;
+
+			double* xbvals = (double *) (*xb.getStorage()).vals;
 
 			int mdim0 = mstruct.dimensions[0];
 			int mdim1 = mstruct.dimensions[1];
@@ -255,8 +267,8 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			double *data = (double *)mstruct.vals;
 			double *output;
 
-			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
-							,  SpMBCSR(data,vvals,crd,pos,cols,rows,blockSize1,blockSize2,output)
+			ATL_TIME_REPEAT(output = (double *) calloc(rows, sizeof(double))
+							,  SpMBCSR(data,xbvals,crd,pos,cols,rows,blockSize1,blockSize2,output)
 							, free(output)
 							, myValidate(out,output,vdim0)
 							, repeat, timevalue, true)

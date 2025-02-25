@@ -289,11 +289,13 @@ int main(int argc, char* argv[]) {
 
 	  { // Just do BCSR
 			// cout << endl << "y(io,ii) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
-        	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Dense},true);
+        	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Sparse},true);
 			int blockSize1 = 1;
 			int blockSize2 = 1;
-			int rows = A.getDimension(0);
-			int cols = A.getDimension(1);
+
+      // Pad to the next multiple of blockSize1 and blockSize2 for the respective dimension
+      int rows = ((A.getDimension(0) + blockSize1 - 1) / blockSize1) * blockSize1;
+      int cols = ((A.getDimension(1) + blockSize2 - 1) / blockSize2) * blockSize2;
 
 			Tensor<double>Ab({rows/blockSize1,cols/blockSize2,blockSize1,blockSize2}
 							,Format({Dense,Sparse,Dense,Dense}));
@@ -307,7 +309,7 @@ int main(int argc, char* argv[]) {
 			
 			Ab.pack();
 
-			Tensor<double>xb({x.getDimension(0)/blockSize2,blockSize2}
+			Tensor<double>xb({cols/blockSize2,blockSize2}
 							,Format({Dense,Dense}));
 			for (auto& value : iterate<double>(x)) {
 				xb.insert({value.first[0]/blockSize2,value.first[0]%blockSize2}
@@ -315,7 +317,7 @@ int main(int argc, char* argv[]) {
 			}
 			xb.pack();
 
-      		Tensor<double> y({x.getDimension(0)/blockSize1,blockSize1}
+      		Tensor<double> y({rows/blockSize1,blockSize1}
 							, Format({Dense,Dense}));
       		IndexVar io, ii, jo, ji;
 	      auto prepareY = [&]() {
