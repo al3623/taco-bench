@@ -303,6 +303,7 @@ int main(int argc, char* argv[]) {
 							   , value.first[1]%blockSize2}
 								, value.second);
 			}
+			
 			Ab.pack();
 
 			Tensor<double>xb({x.getDimension(0)/blockSize2,blockSize2}
