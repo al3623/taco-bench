@@ -123,12 +123,14 @@ int main(int argc, char* argv[]) {
   map<string,string> inputFilenames;
   taco::util::TimeResults timevalue;
   map<string,bool> products;
+  /*
   products.insert({"EIGEN",true});
   products.insert({"GMM",true});
   products.insert({"UBLAS",true});
   products.insert({"OSKI",true});
   products.insert({"POSKI",true});
   products.insert({"MKL",true});
+  */
   products.insert({"YOUR",true});
 
   if (argc < 2)
@@ -268,23 +270,29 @@ int main(int argc, char* argv[]) {
 	  	ATLOperands["A"].push_back(A);
         Tensor<double> y({rows}, Dense);
 
-        y(i) = A(i,j) * x(j);
+        auto prepareY = [&]() {
+            y(i) = A(i,j) * x(j);
+            y.compile();
+            y.assemble();
+        };
+        prepareY();
 
         // TACO_BENCH(y.compile();, "Compile",1,timevalue,false)
         // TACO_BENCH(y.assemble();,"Assemble",1,timevalue,false)
-		y.compile();
-		y.assemble();
-        TACO_BENCH(y.compute();, formats.first,repeat, timevalue, true)
+
+	ATL_TIME_REPEAT(;, y.compute(), prepareY(), ;, repeat, timevalue, true)
+	cout << "Taco " << formats.first << endl << timevalue << endl;
+
 
         validate("taco", y, yRef);
       }
 
-
+		/*
 	  { // Just do BCSR
 			// cout << endl << "y(jo,ji) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
         	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Dense},true);
-			int blockSize1 = 32;
-			int blockSize2 = 32;
+			int blockSize1 = 4;
+			int blockSize2 = 4;
 			int rows = A.getDimension(0);
 			int cols = A.getDimension(1);
 
@@ -310,12 +318,18 @@ int main(int argc, char* argv[]) {
       		Tensor<double> y({x.getDimension(0)/blockSize2,blockSize2}
 							, Format({Dense,Dense}));
       		IndexVar io, ii, jo, ji;
-			y(jo,ji) = Ab(io,jo,ii,ji) * xb(jo,ji);
-			y.compile();
-			y.assemble();
-        	TACO_BENCH(y.compute();, "BCSR",repeat, timevalue, true)
+	      auto prepareY = [&]() {
+		  y(jo,ji) = Ab(io,jo,ii,ji) * xb(jo,ji);
+		  y.compile();
+		  y.assemble();
+	      };
+	      prepareY();
+        //TACO_BENCH(y.compute();, "BCSR",repeat, timevalue, true)
+        ATL_TIME_REPEAT(;, y.compute(), prepareY(), ;, repeat, timevalue, true)
+			  cout << "Taco BCSR" << endl << timevalue << endl;
 			
 	  }
+	  */
       exprOperands.insert({"yRef",yRef});
       exprOperands.insert({"A",A});
       exprOperands.insert({"x",x});
@@ -657,6 +671,7 @@ int main(int argc, char* argv[]) {
       return reportError("Unknown Expression", 3);
     }
   }
+  /*
 #ifdef EIGEN
   if (products.at("EIGEN")) {
     exprToEIGEN(Expr,exprOperands,repeat,timevalue);
@@ -687,6 +702,7 @@ int main(int argc, char* argv[]) {
     exprToOSKI(Expr,exprOperands,repeat,timevalue);
   }
 #endif
+  */
 #ifdef YOUR
   if (products.at("YOUR")) {
     exprToYOUR(Expr,ATLOperands,repeat,timevalue);

@@ -18,9 +18,9 @@ extern "C" {
 #define ATL_TIME_REPEAT(SETUP, CODE, TAKEDOWN, ONCE, REPEAT, RES, COLD) {  \
     taco::util::Timer timer;                         \
     for(int i=0; i<REPEAT; i++) {                    \
+      SETUP;                                 \
       if(COLD)                                       \
         timer.clear_cache();                         \
-      SETUP;                                 \
       timer.start();                                 \
       CODE;                                          \
       timer.stop();                                  \
@@ -47,7 +47,7 @@ void myValidate(Tensor<double> t, double *t2, int n) {
 }
 
 void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,int repeat, taco::util::TimeResults timevalue) {
-
+	
 	Tensor<double> v = exprOperands.at("x")[0];
 	Tensor<double> out = exprOperands.at("yRef")[0];
 
@@ -62,7 +62,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 	vector<Tensor<double>> ms = exprOperands.at("A");
 	for (Tensor<double> m : ms) {
 		Tensor<double> v = exprOperands.at("x")[0];
-
+		// if (false) {
 		if (m.getFormat()==CSR) {
 			TensorStorage mstor = m.getStorage();
 			struct taco_tensor_t mstruct = *mstor;
@@ -72,7 +72,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			int *crd = (int *)mstruct.indices[1][1];
 			double *data = (double *)mstruct.vals;
 			double *output;
-			
+		
 			ATL_TIME_REPEAT(output = (double *) calloc(mdim0, sizeof(double))
 							, SpMCSR(vvals,data,crd,pos,mdim0,output)
 							, free(output)
@@ -87,6 +87,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			free(output);
 			*/
 		}
+		//if (false) {
 		if (m.getFormat()==CSC) {
 			TensorStorage mstor = m.getStorage();
 			struct taco_tensor_t mstruct = *mstor;
@@ -112,6 +113,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			free(output);
 			*/
 		}
+		// if (false) {
 		if (m.getFormat()==DCSR) {
 			TensorStorage mstor = m.getStorage();
 			struct taco_tensor_t mstruct = *mstor;
@@ -142,6 +144,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			free(output);
 			*/
 		}
+		//if (false) {
 		if (m.getFormat()==DCSC) {
 			TensorStorage mstor = m.getStorage();
 			struct taco_tensor_t mstruct = *mstor;
@@ -172,6 +175,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			free(output);
 			*/
 		}
+		// if (false) {
 		if (m.getFormat() == COO(2)) {
 			TensorStorage mstor = m.getStorage();
 			struct taco_tensor_t mstruct = *mstor;
@@ -202,7 +206,8 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			*/
 		}
 
-		if (isDense(m.getFormat())) {
+		if (false) {
+		//if (isDense(m.getFormat())) {
 
 			int rows= m.getDimension(0);
 			int cols= m.getDimension(1);
