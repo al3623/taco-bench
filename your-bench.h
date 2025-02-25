@@ -99,7 +99,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			double *data = (double *)mstruct.vals;
 			double *output;
 
-			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
+			ATL_TIME_REPEAT(output = (double *) calloc(mdim0, sizeof(double))
 							, SpMCSC(vvals,data,pos,crd,mdim0,mdim1,output)
 							, free(output)
 							, myValidate(out,output,vdim0)
@@ -130,7 +130,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			double *data = (double *)mstruct.vals;
 			double *output;
 
-			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
+			ATL_TIME_REPEAT(output = (double *) calloc(mdim0, sizeof(double))
 							,  SpMVDCSR(vvals,data,pos0,pos1,crd0,crd1,mdim0,mdim1,output)
 							, free(output)
 							, myValidate(out,output,vdim0)
@@ -161,7 +161,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			double *data = (double *)mstruct.vals;
 			double *output;
 
-			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
+			ATL_TIME_REPEAT(output = (double *) calloc(mdim0, sizeof(double))
 							, SpMDCSC(vvals,data,pos0,pos1,crd0,crd1,mdim0,output)
 							, free(output)
 							, myValidate(out,output,vdim0)
@@ -190,7 +190,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			double *data = (double *)mstruct.vals;
 			double *output;
 
-			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
+			ATL_TIME_REPEAT(output = (double *) calloc(mdim0, sizeof(double))
 							, SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output)
 							, free(output)
 							, myValidate(out,output,vdim0)
@@ -243,17 +243,17 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 								, value.second);
 			}
   			Ab.pack();
-			
+			/*	
 			Tensor<double> xb({cols}, Format({Dense}));
 			for (auto& value : iterate<double>(v)) {
 				xb.insert({value.first[0]},value.second);
 			}
 			xb.pack();
-			
+			*/
 			TensorStorage mstor = Ab.getStorage();
 			struct taco_tensor_t mstruct = *mstor;
 
-			double* xbvals = (double *) (*xb.getStorage()).vals;
+			double* xbvals = (double *) (*v.getStorage()).vals;
 
 			int mdim0 = mstruct.dimensions[0];
 			int mdim1 = mstruct.dimensions[1];
