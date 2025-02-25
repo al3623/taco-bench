@@ -287,12 +287,11 @@ int main(int argc, char* argv[]) {
         validate("taco", y, yRef);
       }
 
-		/*
 	  { // Just do BCSR
 			// cout << endl << "y(jo,ji) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
         	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Dense},true);
-			int blockSize1 = 4;
-			int blockSize2 = 4;
+			int blockSize1 = 1;
+			int blockSize2 = 1;
 			int rows = A.getDimension(0);
 			int cols = A.getDimension(1);
 
@@ -329,7 +328,7 @@ int main(int argc, char* argv[]) {
 			  cout << "Taco BCSR" << endl << timevalue << endl;
 			
 	  }
-	  */
+	  
       exprOperands.insert({"yRef",yRef});
       exprOperands.insert({"A",A});
       exprOperands.insert({"x",x});

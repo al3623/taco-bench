@@ -256,7 +256,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			double *output;
 
 			ATL_TIME_REPEAT(output = (double *) calloc(vdim0, sizeof(double))
-							,  SpMBCSR(data,vvals,crd,pos,rows,cols,blockSize1,blockSize2,output)
+							,  SpMBCSR(data,vvals,crd,pos,cols,rows,blockSize1,blockSize2,output)
 							, free(output)
 							, myValidate(out,output,vdim0)
 							, repeat, timevalue, true)
