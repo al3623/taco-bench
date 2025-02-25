@@ -304,6 +304,7 @@ int main(int argc, char* argv[]) {
 							   , value.first[1]%blockSize2}
 								, value.second);
 			}
+			
 			Ab.pack();
 
 			Tensor<double>xb({x.getDimension(0)/blockSize2,blockSize2}
@@ -314,7 +315,7 @@ int main(int argc, char* argv[]) {
 			}
 			xb.pack();
 
-      		Tensor<double> y({x.getDimension(0)/blockSize2,blockSize2}
+      		Tensor<double> y({x.getDimension(0)/blockSize1,blockSize1}
 							, Format({Dense,Dense}));
       		IndexVar io, ii, jo, ji;
 	      auto prepareY = [&]() {
