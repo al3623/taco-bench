@@ -224,8 +224,8 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			// let's try BCSR
 
 			// Pad to the next multiple of blockSize1 and blockSize2 for the respective dimension
-			int blockSize1 = 1;
-			int blockSize2 = 1;
+			int blockSize1 = 2;
+			int blockSize2 = 4;
 			int rows = ((m.getDimension(0) + blockSize1 - 1) / blockSize1) * blockSize1;
 			int cols = ((m.getDimension(1) + blockSize2 - 1) / blockSize2) * blockSize2;
 

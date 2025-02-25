@@ -290,8 +290,8 @@ int main(int argc, char* argv[]) {
 	  { // Just do BCSR
 			// cout << endl << "y(io,ii) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
         	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Sparse},true);
-			int blockSize1 = 1;
-			int blockSize2 = 1;
+			int blockSize1 = 2;
+			int blockSize2 = 4;
 
       // Pad to the next multiple of blockSize1 and blockSize2 for the respective dimension
       int rows = ((A.getDimension(0) + blockSize1 - 1) / blockSize1) * blockSize1;
