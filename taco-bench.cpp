@@ -288,7 +288,7 @@ int main(int argc, char* argv[]) {
       }
 
 	  { // Just do BCSR
-			// cout << endl << "y(jo,ji) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
+			// cout << endl << "y(io,ii) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
         	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Dense},true);
 			int blockSize1 = 1;
 			int blockSize2 = 1;
@@ -318,7 +318,7 @@ int main(int argc, char* argv[]) {
 							, Format({Dense,Dense}));
       		IndexVar io, ii, jo, ji;
 	      auto prepareY = [&]() {
-		  y(jo,ji) = Ab(io,jo,ii,ji) * xb(jo,ji);
+		  y(io,ii) = Ab(io,jo,ii,ji) * xb(jo,ji);
 		  y.compile();
 		  y.assemble();
 	      };
