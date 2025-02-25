@@ -25,4 +25,4 @@ def generate_random_mtx(rows, cols, sparsity=0.5,filename="random_mat.mtx"):
     print(f"Random MTX file generated: {filename}")
     
 
-generate_random_mtx(200,200,0.80) 
+generate_random_mtx(200,100,0.80) 
