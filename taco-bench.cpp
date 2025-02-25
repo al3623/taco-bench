@@ -290,11 +290,10 @@ int main(int argc, char* argv[]) {
 	  { // Just do BCSR
 			// cout << endl << "y(io,ii) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
         	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Dense},true);
-			int blockSize1 = 1;
-			int blockSize2 = 1;
+			int blockSize1 = 31;
+			int blockSize2 = 31;
 			int rows = A.getDimension(0);
 			int cols = A.getDimension(1);
-
 			Tensor<double>Ab({rows/blockSize1,cols/blockSize2,blockSize1,blockSize2}
 							,Format({Dense,Sparse,Dense,Dense}));
 			for (auto& value : iterate<double>(A)) {
@@ -314,7 +313,7 @@ int main(int argc, char* argv[]) {
 			}
 			xb.pack();
 
-      		Tensor<double> y({x.getDimension(0)/blockSize2,blockSize2}
+      		Tensor<double> y({x.getDimension(0)/blockSize1,blockSize1}
 							, Format({Dense,Dense}));
       		IndexVar io, ii, jo, ji;
 	      auto prepareY = [&]() {
@@ -326,6 +325,7 @@ int main(int argc, char* argv[]) {
         //TACO_BENCH(y.compute();, "BCSR",repeat, timevalue, true)
         ATL_TIME_REPEAT(;, y.compute(), prepareY(), ;, repeat, timevalue, true)
 			  cout << "Taco BCSR" << endl << timevalue << endl;
+
 			
 	  }
 	  
