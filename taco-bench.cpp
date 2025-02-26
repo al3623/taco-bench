@@ -258,7 +258,6 @@ int main(int argc, char* argv[]) {
       yRef.compute();
 
       TacoFormats.insert({"CSR",CSR});
-	  /*
       TacoFormats.insert({"CSC",CSC});
       TacoFormats.insert({"DCSR",DCSR});
       TacoFormats.insert({"DCSC",DCSC});
@@ -287,7 +286,6 @@ int main(int argc, char* argv[]) {
 
         validate("taco", y, yRef);
       }
-*/
 	  { // Just do BCSR
 			// cout << endl << "y(io,ii) = A(i0,j0,ii,ji) * x(jo,ji) -- BCSR" << endl;
         	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Sparse},true);
