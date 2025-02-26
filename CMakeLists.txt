@@ -6,8 +6,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -g -ffast-math -std=c++11")
 file(GLOB SOURCE_CODE ${PROJECT_SOURCE_DIR}/*.cpp)
 file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/*.h)
 add_executable(${PROJECT_NAME} ${SOURCE_CODE} ${HEADERS})
-set(YOUR_INCLUDE_DIR "/home/amanda/taco-bench/sparse_atl")
-set(YOUR_LIBRARY_DIR "/home/amanda/taco-bench/sparse_atl")
+set(YOUR_INCLUDE_DIR "/home/lamanda/taco-bench/sparse_atl")
+set(YOUR_LIBRARY_DIR "/home/lamanda/taco-bench/sparse_atl")
 set(YOUR "/home/amanda/taco-bench/sparse_atl")
 
 # To find taco
