@@ -28,6 +28,6 @@ parts = sys.argv[1].split(".")
 
 with open(parts[0]+".csv","w") as file:
 	file.write("Format,ATL (ms),Taco (ms)\n")
-	file.write("Dense,,"+taco["Dense"]+"\n")
+	# file.write("Dense,,"+taco["Dense"]+"\n")
 	for format in atl:
 		file.write(format+","+ atl[format]+","+taco[format]+"\n")
