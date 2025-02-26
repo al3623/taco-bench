@@ -262,7 +262,7 @@ int main(int argc, char* argv[]) {
       TacoFormats.insert({"DCSR",DCSR});
       TacoFormats.insert({"DCSC",DCSC});
       TacoFormats.insert({"COO",COO(2)});
-      TacoFormats.insert({"Dense",{Dense,Dense}});
+      // TacoFormats.insert({"Dense",{Dense,Dense}});
       // TacoFormats.insert({"Sparse,Sparse",Format({Sparse,Sparse})});
       for (auto& formats:TacoFormats) {
         // cout << endl << "y(i) = A(i,j)*x(j) -- " << formats.first <<endl;

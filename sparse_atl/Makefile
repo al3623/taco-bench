@@ -1,5 +1,5 @@
 CC := clang
-CFLAGS := -g -Wall
+CFLAGS := -g -Wall -std=c99
 LDFLAGS := -g
 
 GENFILE := gen.out
@@ -11,7 +11,7 @@ libsparse.a: $(OBJECTS)
 	ranlib $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -ffast-math -O3 -fopenmp -c $^ -o $@
+	$(CC) $(CFLAGS) -ffast-math -O3 -c $^ -o $@
 
 .PHONY: clean scrub
 
