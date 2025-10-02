@@ -63,7 +63,8 @@ static void printUsageInfo() {
             "   5: SDDMM         A = B o (CxD) \n"
             "   6: SparsitySpMV  y = alpha*A^Tx + beta*z \n"
             "   7: SparsityTTV   A(i,j) = B(i,j,k) * x(k) \n"
-            "   8: SparsitySpMDM C(i,j) = A(i, k) * B(k, j) \n");
+            "   8: SparsitySpMDM C(i,j) = A(i, k) * B(k, j) \n"
+	    "   9: SpMTTKRP        A(i,j) = B(i,k,l) * D(l,j) * C(k,j) \n");
   cout << endl;
   printFlag("r=<repeat>",
             "Time compilation, assembly and <repeat> times computation "
@@ -116,6 +117,8 @@ int main(int argc, char* argv[]) {
   map<string,Tensor<double>> exprOperands;
   map<string,vector<Tensor<double>>> ATLOperands;
   ATLOperands["A"] = vector<Tensor<double>>();
+  ATLOperands["ARef"] = vector<Tensor<double>>();
+  ATLOperands["B"] = vector<Tensor<double>>();
   ATLOperands["x"] = vector<Tensor<double>>();
   ATLOperands["yRef"] = vector<Tensor<double>>();
   int repeat=1;
@@ -167,6 +170,8 @@ int main(int argc, char* argv[]) {
           Expr=SparsityTTV;
         else if(Expression==8)
           Expr=SparsitySpMDM;
+        else if(Expression==9)
+          Expr=SpMTTKRP;
         else
           return reportError("Incorrect Expression descriptor", 3);
       }
@@ -335,7 +340,7 @@ int main(int argc, char* argv[]) {
       exprOperands.insert({"yRef",yRef});
       exprOperands.insert({"A",A});
       exprOperands.insert({"x",x});
-	  ATLOperands["yRef"].push_back(yRef);
+      ATLOperands["yRef"].push_back(yRef);
       break;
     }
     case PLUS3: {
@@ -535,44 +540,46 @@ int main(int argc, char* argv[]) {
       dim1=size;
       dim2=size;
       dim3=size;
+      cout << size << endl;
       Tensor<double> x({dim3}, Dense);
       util::fillTensor(x,util::FillMethod::Dense);
       Tensor<double> ARef({dim1,dim2}, Format({Dense,Dense}));
       Tensor<double> B({dim1,dim2,dim3}, Format({Dense,Dense,Dense}));
-      util::fillTensor(B,util::FillMethod::Dense,1.0);
+      util::fillTensor(B,util::FillMethod::Random,0.5);
       IndexVar i, j, k;
       ARef(i,j) = B(i,j,k) * x(k);
       ARef.compile();
       ARef.assemble();
-      cout << endl << "A(i,j) = B(i,j,k)*x(k) -- Dense,Dense,Dense -- DENSE" << endl;
+      cout << endl
+	   << "A(i,j) = B(i,j,k)*x(k) -- Dense,Dense,Dense -- DENSE" << endl;
       TACO_BENCH(ARef.compute();, "Compute",repeat, timevalue, true)
 
-      TacoFormats.insert({"Sparse,Sparse,Sparse",Format({Sparse,Sparse,Sparse})});
-      // TacoFormats.insert({"Sparse,Sparse,Dense",Format({Sparse,Sparse,Dense})});
-      // TacoFormats.insert({"Sparse,Dense,Sparse",Format({Sparse,Dense,Sparse})});
-      // TacoFormats.insert({"Sparse,Dense,Dense",Format({Sparse,Dense,Dense})});
-      // TacoFormats.insert({"Dense,Sparse,Sparse",Format({Dense,Sparse,Sparse})});
-      // TacoFormats.insert({"Dense,Sparse,Dense",Format({Dense,Sparse,Dense})});
-      // TacoFormats.insert({"Dense,Dense,Sparse",Format({Dense,Dense,Sparse})});
-
+      TacoFormats.insert({"Sparse,Sparse,Sparse",
+	  Format({Sparse,Sparse,Sparse})});
+      
       for (auto& formats:TacoFormats) {
-        cout << endl << "A(i,j) = B(i,j,k)*x(k) -- " << formats.first << " -- DENSE" << endl;
+        cout << endl
+	     << "A(i,j) = B(i,j,k)*x(k) -- " << formats.first
+	     << " -- DENSE" << endl;
         Tensor<double> Btmp({dim1,dim2,dim3},formats.second);
         for (auto& value : iterate<double>(B)) {
-          Btmp.insert({value.first[0],value.first[1],value.first[2]},value.second);
+          Btmp.insert({value.first[0],
+	      value.first[1],value.first[2]},value.second);
         }
         Btmp.pack();
         Tensor<double> A({dim1,dim2}, Format({Dense,Dense}));
 
         A(i,j) = Btmp(i,j,k) * x(k);
+	ATLOperands["B"].push_back(Btmp);
 
-        TACO_BENCH(A.compile();, "Compile",1,timevalue,false)
-        TACO_BENCH(A.assemble();,"Assemble",1,timevalue,false)
+        A.compile();
+        A.assemble();
         TACO_BENCH(A.compute();, "Compute",repeat, timevalue, true)
 
         validate("taco", A, ARef);
       }
 
+      /*
       for (auto sparsity:Sparsities) {
         Tensor<double> Bgen({dim1,dim2,dim3},Format({Sparse,Sparse,Sparse}));
         util::fillTensor(Bgen,util::FillMethod::Random,sparsity);
@@ -592,16 +599,19 @@ int main(int argc, char* argv[]) {
 
           A(i,j) = Btmp(i,j,k) * x(k);
 
-          TACO_BENCH(A.compile();, "Compile",1,timevalue,false)
-          TACO_BENCH(A.assemble();,"Assemble",1,timevalue,false)
+          // TACO_BENCH(A.compile();, "Compile",1,timevalue,false)
+          // TACO_BENCH(A.assemble();,"Assemble",1,timevalue,false)
           TACO_BENCH(A.compute();, "Compute",repeat, timevalue, true)
         }
-      }
-      exprOperands.insert({"ARef",ARef});
-      exprOperands.insert({"B",B});
-      exprOperands.insert({"x",x});
+	} */
+      ATLOperands["ARef"].push_back(ARef);
+      ATLOperands["x"].push_back(x);
       break;
     }
+  case SpMTTKRP: {
+    cout << "TODO: SpMTTKRP" << endl;
+    break;
+  }
     case SparsitySpMDM: {
       int rows,cols;
       rows = size;
