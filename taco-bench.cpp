@@ -117,8 +117,10 @@ int main(int argc, char* argv[]) {
   map<string,Tensor<double>> exprOperands;
   map<string,vector<Tensor<double>>> ATLOperands;
   ATLOperands["A"] = vector<Tensor<double>>();
-  ATLOperands["ARef"] = vector<Tensor<double>>();
   ATLOperands["B"] = vector<Tensor<double>>();
+  ATLOperands["C"] = vector<Tensor<double>>();
+  ATLOperands["D"] = vector<Tensor<double>>();
+  ATLOperands["ARef"] = vector<Tensor<double>>();
   ATLOperands["x"] = vector<Tensor<double>>();
   ATLOperands["yRef"] = vector<Tensor<double>>();
   int repeat=1;
@@ -609,7 +611,55 @@ int main(int argc, char* argv[]) {
       break;
     }
   case SpMTTKRP: {
-    cout << "TODO: SpMTTKRP" << endl;
+    // A(i,j) = B(i,k,l) * D(l,j) * C(k,j)
+    int dim1,dim2,dim3,dim4;
+    dim1 = size;
+    dim2 = size;
+    dim3 = size;
+    dim4 = size;
+    Tensor<double> ARef({dim1,dim4}, Format({Dense,Dense}));
+    Tensor<double> B({dim1,dim2,dim3}, Format({Dense,Dense,Dense}));
+    Tensor<double> C({dim3,dim4}, Format({Dense,Dense}));
+    Tensor<double> D({dim2,dim4}, Format({Dense,Dense}));
+    util::fillTensor(B,util::FillMethod::Random,0.5);
+    util::fillTensor(C,util::FillMethod::Dense);
+    util::fillTensor(D,util::FillMethod::Dense);
+
+    IndexVar i, j, k, l;
+    ARef(i,j) = B(i,k,l) * D(l,j) * C(k,j);
+    ARef.compile();
+    ARef.assemble();
+    cout << endl
+	 << "A(i,j) = B(i,k,l)*D(l,j)*C(k,j) -- Dense,Dense,Dense" << endl;
+    TACO_BENCH(ARef.compute();, "Compute",repeat, timevalue, true)
+      
+    TacoFormats.insert({"Sparse,Sparse,Sparse",
+	Format({Sparse,Sparse,Sparse})});
+      
+    for (auto& formats:TacoFormats) {
+      cout << endl
+	   << "A(i,j) = B(i,k,l)*D(l,j)*C(k,j) -- " << formats.first << endl;
+      Tensor<double> Btmp({dim1,dim2,dim3},formats.second);
+      for (auto& value : iterate<double>(B)) {
+	Btmp.insert({value.first[0],
+	    value.first[1],value.first[2]},value.second);
+      }
+      Btmp.pack();
+      Tensor<double> A({dim1,dim4}, Format({Dense,Dense}));
+      
+      A(i,j) = Btmp(i,k,l) * D(l,j) * C(k,j);
+      ATLOperands["B"].push_back(Btmp);
+
+      A.compile();
+      A.assemble();
+      TACO_BENCH(A.compute();, "Compute",repeat, timevalue, true)
+	
+      validate("taco", A, ARef);
+    }
+    
+    ATLOperands["ARef"].push_back(ARef);
+    ATLOperands["C"].push_back(C);
+    ATLOperands["D"].push_back(D);
     break;
   }
     case SparsitySpMDM: {

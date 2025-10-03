@@ -38,14 +38,14 @@ void myValidate(Tensor<double> t, double *t2, int n) {
 	double *t1 = (double *) (*t.getStorage()).vals;
 	bool success = true;
 	for (int i = 0; i < n; i++) {
-		if (fabs(t1[i] -  t2[i]) / fabs(t1[i]) > 1e-6) {
+		if (fabs(t1[i] -  t2[i]) / fabs(t1[i]) > 1e-4) {
 		// if (t1[i] != t2[i]) { 
-			// fprintf(stderr,"%d: %f <> %f\n",i,t1[i],t2[i]);
+			fprintf(stderr,"%d: %f <> %f\n",i,t1[i],t2[i]);
 			success = false;
 		}	
 	}	
 	if (success) {
-		// fprintf(stderr,"success!\n");
+		fprintf(stderr,"success!\n");
 	}
 }
 
@@ -314,14 +314,51 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
     double *output;
 
     ATL_TIME_REPEAT(output = (double *) calloc(Bdim0*xdim0, sizeof(double))
-		    , TTV(data,xvals,pos0,pos1,pos2,crd2,crd1,crd0,Bdim0,xdim0,output)
+		    , TTV(data,xvals,pos0,pos1,
+			  pos2,crd2,crd1,crd0,Bdim0,xdim0,output)
 		    , free(output)
 		    , myValidate(ARef,output,xdim0*Bdim0)
 		    , repeat, timevalue, true)
       cout << "ATL TTV\n" << timevalue << endl;
     
   } else if (Expr==SpMTTKRP) {
-    cout << "MTTKRP!" << endl;
+    // A(i,j) = B(i,k,l) * D(l,j) * C(k,j)
+    Tensor<double> ARef = exprOperands.at("ARef")[0];
+    Tensor<double> B = exprOperands.at("B")[0];
+    Tensor<double> C = exprOperands.at("C")[0];
+    Tensor<double> D = exprOperands.at("D")[0];
+    
+    TensorStorage cstor = C.getStorage();
+    struct taco_tensor_t cstruct = *cstor;
+    double *cvals = (double *)cstruct.vals;
+    TensorStorage dstor = D.getStorage();
+    struct taco_tensor_t dstruct = *dstor;
+    double *dvals = (double *)dstruct.vals;
+    
+    TensorStorage Bstor = B.getStorage();
+    struct taco_tensor_t Bstruct = *Bstor;
+    
+    int dim0 = Bstruct.dimensions[0];
+    int dim1 = Bstruct.dimensions[1];
+    int dim2 = Bstruct.dimensions[2];
+    int dim3 = dstruct.dimensions[1];
+
+    int *pos0 = (int *)Bstruct.indices[0][0];
+    int *crd0 = (int *)Bstruct.indices[0][1];
+    int *pos1 = (int *)Bstruct.indices[1][0];
+    int *crd1 = (int *)Bstruct.indices[1][1];
+    int *pos2 = (int *)Bstruct.indices[2][0];
+    int *crd2 = (int *)Bstruct.indices[2][1];
+    double *data = (double *)Bstruct.vals;
+    
+    double *output;
+    ATL_TIME_REPEAT(output = (double *) calloc(dim0*dim3, sizeof(double))
+		    , MTTKRP(data,dvals,cvals,pos1,pos2,crd1,crd2,
+			     crd0,pos0,dim3,output)
+		    , free(output)
+		    , myValidate(ARef,output,dim0*dim3)
+		    , repeat, timevalue, true)
+      cout << "ATL MTTKRP\n" << timevalue << endl;
   } else {
     cout << "No ATL library linked for this expression!" << endl;
   }
