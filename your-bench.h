@@ -40,7 +40,7 @@ void myValidate(Tensor<double> t, double *t2, int n) {
 	for (int i = 0; i < n; i++) {
 		if (fabs(t1[i] -  t2[i]) / fabs(t1[i]) > 1e-4) {
 		// if (t1[i] != t2[i]) { 
-		  // fprintf(stderr,"%d: %f <> %f\n",i,t1[i],t2[i]);
+			// fprintf(stderr,"%d: %lf <> %lf\n",i,t1[i],t2[i]);
 			success = false;
 		}	
 	}	
