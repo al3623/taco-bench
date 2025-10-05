@@ -539,26 +539,32 @@ int main(int argc, char* argv[]) {
     }
     case SparsityTTV: {
       int dim1,dim2,dim3;
-      dim1=size;
-      dim2=size;
-      dim3=size;
-      cout << size << endl;
+      // readMatrixSize(inputFilenames.at("B"),rows,cols);
+      cout << "TTV"  << endl;
+      Tensor<double> B=read(inputFilenames.at("B")
+			    , Format({Sparse,Sparse,Sparse}),true);
+      cout << "B loaded"  << endl;
+      dim1= B.getDimensions()[0];
+      dim2= B.getDimensions()[1];
+      dim3= B.getDimensions()[2]; 
+      cout << dim1 << endl;
       Tensor<double> x({dim3}, Dense);
       util::fillTensor(x,util::FillMethod::Dense);
       Tensor<double> ARef({dim1,dim2}, Format({Dense,Dense}));
-      Tensor<double> B({dim1,dim2,dim3}, Format({Dense,Dense,Dense}));
-      util::fillTensor(B,util::FillMethod::Random,0.5);
+      // Tensor<double> B({dim1,dim2,dim3}, Format({Dense,Dense,Dense}));
+      // util::fillTensor(B,util::FillMethod::Random,0.5);
       IndexVar i, j, k;
       ARef(i,j) = B(i,j,k) * x(k);
       ARef.compile();
       ARef.assemble();
       cout << endl
-	   << "A(i,j) = B(i,j,k)*x(k) -- Dense,Dense,Dense -- DENSE" << endl;
+	   << "A(i,j) = B(i,j,k)*x(k) -- Sparse,Sparse,Sparse -- DENSE" << endl;
       TACO_BENCH(ARef.compute();, "Compute",repeat, timevalue, true)
-
+	cout << "Done" << endl;
       TacoFormats.insert({"Sparse,Sparse,Sparse",
 	  Format({Sparse,Sparse,Sparse})});
-      
+      ATLOperands["B"].push_back(B);
+      /*
       for (auto& formats:TacoFormats) {
         cout << endl
 	     << "A(i,j) = B(i,j,k)*x(k) -- " << formats.first
@@ -580,8 +586,7 @@ int main(int argc, char* argv[]) {
 
         validate("taco", A, ARef);
       }
-
-      /*
+     
       for (auto sparsity:Sparsities) {
         Tensor<double> Bgen({dim1,dim2,dim3},Format({Sparse,Sparse,Sparse}));
         util::fillTensor(Bgen,util::FillMethod::Random,sparsity);

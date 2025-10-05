@@ -40,7 +40,7 @@ void myValidate(Tensor<double> t, double *t2, int n) {
 	for (int i = 0; i < n; i++) {
 		if (fabs(t1[i] -  t2[i]) / fabs(t1[i]) > 1e-4) {
 		// if (t1[i] != t2[i]) { 
-			fprintf(stderr,"%d: %f <> %f\n",i,t1[i],t2[i]);
+		  // fprintf(stderr,"%d: %f <> %f\n",i,t1[i],t2[i]);
 			success = false;
 		}	
 	}	
@@ -302,7 +302,9 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
     
     int Bdim0 = Bstruct.dimensions[0];
     int Bdim1 = Bstruct.dimensions[1];
-
+    int Bdim2 = Bstruct.dimensions[2];
+    cout << Bdim0 << endl;
+    cout << Bdim1 << endl;
     int *pos0 = (int *)Bstruct.indices[0][0];
     int *crd0 = (int *)Bstruct.indices[0][1];
     int *pos1 = (int *)Bstruct.indices[1][0];
@@ -313,11 +315,11 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
     
     double *output;
 
-    ATL_TIME_REPEAT(output = (double *) calloc(Bdim0*xdim0, sizeof(double))
+    ATL_TIME_REPEAT(output = (double *) calloc(Bdim0*Bdim1, sizeof(double))
 		    , TTV(data,xvals,pos0,pos1,
-			  pos2,crd2,crd1,crd0,Bdim0,xdim0,output)
+			  pos2,crd2,crd1,crd0,Bdim1,Bdim0,output)
 		    , free(output)
-		    , myValidate(ARef,output,xdim0*Bdim0)
+		    , myValidate(ARef,output,Bdim0*Bdim1)
 		    , repeat, timevalue, true)
       cout << "ATL TTV\n" << timevalue << endl;
     
