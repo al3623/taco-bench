@@ -248,7 +248,7 @@ int main(int argc, char* argv[]) {
   // taco Formats and sparsities
   map<string,Format> TacoFormats;
   // std::vector<double> Sparsities {0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.4,0.3,0.2,0.1,0.05,0.01,0.001};
-  std::vector<double> Sparsities {0.01,0.005,0.001,0.0005,0.0001};
+  std::vector<double> Sparsities {0.001,0.0001,0.00001,0.000001};
 
   switch(Expr) {
     case SpMV: {
@@ -553,13 +553,19 @@ int main(int argc, char* argv[]) {
       // Tensor<double> B({dim1,dim2,dim3}, Format({Dense,Dense,Dense}));
       // util::fillTensor(B,util::FillMethod::Random,0.5);
       IndexVar i, j, k;
-      ARef(i,j) = B(i,j,k) * x(k);
-      ARef.compile();
-      ARef.assemble();
-      cout << endl
-	   << "A(i,j) = B(i,j,k)*x(k) -- Sparse,Sparse,Sparse -- DENSE" << endl;
-      TACO_BENCH(ARef.compute();, "Compute",repeat, timevalue, true)
+      // cout << endl
+      // << "A(i,j) = B(i,j,k)*x(k) -- Sparse,Sparse,Sparse -- DENSE" << endl;
+      auto prepareY = [&]() {
+            ARef(i,j) = B(i,j,k) * x(k);
+	    ARef.compile();
+	    ARef.assemble();
+        };
+      // TACO_BENCH(y.compile();, "Compile",1,timevalue,false)
+      // TACO_BENCH(y.assemble();,"Assemble",1,timevalue,false)
+      // TACO_BENCH(ARef.compute();, "Compute",repeat, timevalue, true)
       
+      ATL_TIME_REPEAT(prepareY(), ARef.compute(), ;, ;, repeat, timevalue, true)
+	cout << "TACO NELL:\n" << timevalue << endl;
       // THIS IS THE INPUT B
       ATLOperands["B"].push_back(B);
       ATLOperands["ARef"].push_back(ARef);
@@ -577,16 +583,23 @@ int main(int argc, char* argv[]) {
 	// ADD B AT A SPARSITY
 	ATLOperands["B" + std::to_string(sparsity)].push_back(Bgen);
         util::fillTensor(Bgen,util::FillMethod::Random,sparsity);
-	cout << endl << "A(i,j) = B(i,j,k)*x(k) -- Sparse,Sparse,Sparse -- "
-	     << size << " -- " << sparsity << endl;
+	// cout << endl << "A(i,j) = B(i,j,k)*x(k) -- Sparse,Sparse,Sparse -- "
+	//     << size << " -- " << sparsity << endl;
 	Tensor<double> A({dim1,dim2}, Format({Dense,Dense}));
+	auto prepareY = [&]() {
+	  A(i,j) = Bgen(i,j,k) * x_sparsity(k);
+	  A.compile();
+	  A.assemble();
+        };
+	prepareY();
       
-	A(i,j) = Bgen(i,j,k) * x_sparsity(k);
+	ATL_TIME_REPEAT(prepareY(), A.compute(), ;, ;, repeat, timevalue, true)
+	cout << "TACO " << sparsity << ":\n" << timevalue << endl;
 	// ADD RESULT A AT THAT SPARSITY
 	ATLOperands["A" + std::to_string(sparsity)].push_back(A);  
-	A.compile();
-	A.assemble();
-	TACO_BENCH(A.compute();, "Compute",repeat, timevalue, true)
+	// A.compile();
+	// A.assemble();
+	// TACO_BENCH(A.compute();, "Compute",repeat, timevalue, false)
       }
       break;
     }

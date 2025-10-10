@@ -44,8 +44,8 @@ void myValidate(Tensor<double> t, double *t2, int n) {
 			success = false;
 		}	
 	}	
-	if (success) {
-		fprintf(stdout,"success!\n");
+	if (!success) {
+		fprintf(stdout,"failed :(\n");
 	}
 }
 
@@ -320,7 +320,7 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
 		    , free(output)
 		    , myValidate(ARef,output,Bdim0*Bdim1)
 		    , repeat, timevalue, true)
-    cout << "ATL TTV\n" << timevalue << endl;
+    cout << "ATL NELL\n" << timevalue << endl;
     
     for (auto sparsity : Sparsities) {
       Tensor<double> A = exprOperands.at("A" + std::to_string(sparsity))[0];
@@ -354,7 +354,7 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
 		      , free(output)
 		      , myValidate(A,output,Bdim0*Bdim1)
 		      , repeat, timevalue, true)
-	cout << "ATL TTV " << sparsity << ":\n" << timevalue << endl;
+	cout << "ATL " << sparsity << ":\n" << timevalue << endl;
     }
     
   } else if (Expr==SpMTTKRP) {
