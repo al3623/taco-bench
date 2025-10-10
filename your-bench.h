@@ -45,11 +45,11 @@ void myValidate(Tensor<double> t, double *t2, int n) {
 		}	
 	}	
 	if (success) {
-		fprintf(stderr,"success!\n");
+		fprintf(stdout,"success!\n");
 	}
 }
 
-void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,int repeat, taco::util::TimeResults timevalue) {
+void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,std::vector<double> Sparsities,int repeat, taco::util::TimeResults timevalue) {
 
   if (Expr==SpMV) {
 	Tensor<double> v = exprOperands.at("x")[0];
@@ -286,9 +286,9 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
 	}
   } else if (Expr==SparsityTTV) {
     // ARef(i,j) = B(i,j,k) * x(k)
-    Tensor<double> x = exprOperands.at("x")[0];
     Tensor<double> ARef = exprOperands.at("ARef")[0];
     
+    Tensor<double> x = exprOperands.at("x")[0];
     TensorStorage xstor = x.getStorage();
     struct taco_tensor_t xstruct = *xstor;
     double *xvals = (double *)xstruct.vals;
@@ -299,12 +299,10 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
 
     TensorStorage Bstor = B.getStorage();
     struct taco_tensor_t Bstruct = *Bstor;
-    
     int Bdim0 = Bstruct.dimensions[0];
     int Bdim1 = Bstruct.dimensions[1];
     int Bdim2 = Bstruct.dimensions[2];
-    cout << Bdim0 << endl;
-    cout << Bdim1 << endl;
+
     int *pos0 = (int *)Bstruct.indices[0][0];
     int *crd0 = (int *)Bstruct.indices[0][1];
     int *pos1 = (int *)Bstruct.indices[1][0];
@@ -315,13 +313,49 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
     
     double *output;
 
+    
     ATL_TIME_REPEAT(output = (double *) calloc(Bdim0*Bdim1, sizeof(double))
 		    , TTV(data,xvals,pos0,pos1,
 			  pos2,crd2,crd1,crd0,Bdim1,Bdim0,output)
 		    , free(output)
 		    , myValidate(ARef,output,Bdim0*Bdim1)
 		    , repeat, timevalue, true)
-      cout << "ATL TTV\n" << timevalue << endl;
+    cout << "ATL TTV\n" << timevalue << endl;
+    
+    for (auto sparsity : Sparsities) {
+      Tensor<double> A = exprOperands.at("A" + std::to_string(sparsity))[0];
+      Tensor<double> B = exprOperands.at("B" + std::to_string(sparsity))[0];
+      Tensor<double> x = exprOperands.at("x_sparsity")[0];
+
+      TensorStorage xstor = x.getStorage();
+      struct taco_tensor_t xstruct = *xstor;
+      double *xvals = (double *)xstruct.vals;
+      int xdim0 = xstruct.dimensions[0];
+      
+      TensorStorage Bstor = B.getStorage();
+      struct taco_tensor_t Bstruct = *Bstor;
+      
+      int Bdim0 = Bstruct.dimensions[0];
+      int Bdim1 = Bstruct.dimensions[1];
+      int Bdim2 = Bstruct.dimensions[2];
+      int *pos0 = (int *)Bstruct.indices[0][0];
+      int *crd0 = (int *)Bstruct.indices[0][1];
+      int *pos1 = (int *)Bstruct.indices[1][0];
+      int *crd1 = (int *)Bstruct.indices[1][1];
+      int *pos2 = (int *)Bstruct.indices[2][0];
+      int *crd2 = (int *)Bstruct.indices[2][1];
+      double *data = (double *)Bstruct.vals;    
+      double *output;
+      
+      
+      ATL_TIME_REPEAT(output = (double *) calloc(Bdim0*Bdim1, sizeof(double))
+		      , TTV(data,xvals,pos0,pos1,
+			    pos2,crd2,crd1,crd0,Bdim1,Bdim0,output)
+		      , free(output)
+		      , myValidate(A,output,Bdim0*Bdim1)
+		      , repeat, timevalue, true)
+	cout << "ATL TTV " << sparsity << ":\n" << timevalue << endl;
+    }
     
   } else if (Expr==SpMTTKRP) {
     // A(i,j) = B(i,k,l) * D(l,j) * C(k,j)
