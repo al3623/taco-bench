@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include "SpMCSR.h"
+#define max(a,b) ((a) > (b) ? a : b)
+#define min(a,b) ((a) < (b) ? a : b)
 
 void SpMCSR(double *VV, double *data, int *crd0, int *pos, int N,double*output){
 
