@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include "SpMVDCSR.h"
+#define max(a,b) ((a) > (b) ? a : b)
+#define min(a,b) ((a) < (b) ? a : b)
 
 void SpMVDCSR(double *MM, double *data, int *pos, int *pos0, int *crd1, int *crd2, int N, int M,double*output){
 for (int H22 = 0; H22 < pos[1]; H22++) {

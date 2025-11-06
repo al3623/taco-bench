@@ -6,6 +6,7 @@ using namespace std;
 // Add your include here
 // ...
 extern "C" {
+        #include "SpMSpVCSRCSF.h"
 	#include "SpMCSR.h"
 	#include "SpMCSC.h"
 	#include "SpMVDCSR.h"
@@ -284,6 +285,36 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
 			*/
 		}
 	}
+  } else if (Expr==SpMSpV) {
+    Tensor<double> A = exprOperands.at("A")[0];
+    TensorStorage Astor = A.getStorage();
+    struct taco_tensor_t Astruct = *Astor;
+    int A_dimension = (int)(Astruct.dimensions[0]);
+    int * A_pos = (int*)(Astruct.indices[1][0]);
+    int * A_crd = (int*)(Astruct.indices[1][1]);
+    double* A_vals = (double*)(Astruct.vals);
+  
+    for (auto sparsity : Sparsities) {
+      auto x = exprOperands["x" + std::to_string(sparsity)][0];
+      TensorStorage xstor = x.getStorage();
+      struct taco_tensor_t xstruct = *xstor;
+      int * x_pos = (int*)(xstruct.indices[0][0]);
+      int * x_crd = (int*)(xstruct.indices[0][1]);
+      double * x_vals = (double*)(xstruct.vals);
+      
+      auto yref = exprOperands["y" + std::to_string(sparsity)][0];
+
+      double *output;
+      ATL_TIME_REPEAT(output = (double *) calloc(A_dimension, sizeof(double))
+		      , SpMSpVCSRCSF(A_vals,x_vals,A_crd,x_crd,A_pos,x_pos,A_dimension,output)
+		    , free(output)
+		    , myValidate(yref,output,A_dimension)
+		    , repeat, timevalue, true)
+	cout << "ATL SpMSpV " << sparsity << "\n" << timevalue << endl;
+    
+      cout << sparsity << endl;
+    }
+    
   } else if (Expr==SparsityTTV) {
     // ARef(i,j) = B(i,j,k) * x(k)
     Tensor<double> ARef = exprOperands.at("ARef")[0];

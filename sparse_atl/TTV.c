@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include "TTV.h"
+#define max(a,b) ((a) > (b) ? a : b)
+#define min(a,b) ((a) < (b) ? a : b)
 
 void TTV(double *data, double *BB, int *pos, int *pos0, int *pos1, int *CRD2, int *CRD1, int *CRD0, int M, int N,double*output){
 for (int H29 = 0; H29 < pos[1] - (pos[0]); H29++) {

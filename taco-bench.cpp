@@ -56,6 +56,7 @@ static void printUsageInfo() {
   cout << "Options:" << endl;
   printFlag("E=<expressionId>",
             "Specify the expression Id to benchmark from: \n"
+            "   0: SpMSpV        y(i) = A(i,j)*x(j) \n"
             "   1: SpMV          y(i) = A(i,j)*x(j) \n"
             "   2: PLUS3         A(i,j) = B(i,j) + C(i,j) + D(i,j) \n"
             "   3: MATTRANSMUL   y = alpha*A^Tx + beta*z \n"
@@ -157,7 +158,9 @@ int main(int argc, char* argv[]) {
     if ("-E" == argName) {
       try {
         Expression=stoi(argValue);
-        if (Expression==1)
+        if (Expression==0)
+          Expr=SpMSpV;
+        else if (Expression==1)
           Expr=SpMV;
         else if(Expression==2)
           Expr=PLUS3;
@@ -251,7 +254,28 @@ int main(int argc, char* argv[]) {
   std::vector<double> Sparsities {0.01,0.005,0.001,0.0005,0.0001};
 
   switch(Expr) {
-    case SpMV: {
+  case SpMSpV: {
+    
+    int rows,cols;
+    readMatrixSize(inputFilenames.at("A"),rows,cols);
+    Tensor<double> A=read(inputFilenames.at("A"),CSR,true);
+    ATLOperands["A"].push_back(A);
+    
+    for (auto sparsity:Sparsities) {
+      Tensor<double> x_sparsity({cols}, Sparse);
+      util::fillTensor(x_sparsity,util::FillMethod::Random,sparsity);
+      ATLOperands["x" + std::to_string(sparsity)].push_back(x_sparsity);
+      Tensor<double> y({rows}, Dense);
+      IndexVar i, j;
+      y(i) = A(i,j) * x_sparsity(j);
+      y.compile();
+      y.assemble();
+      cout << "SpMSpV " << sparsity << endl;
+      TACO_BENCH(y.compute();, "Compute",repeat, timevalue, true)
+      ATLOperands["y" + std::to_string(sparsity)].push_back(y);
+      } 
+    break;
+  } case SpMV: {
       int rows,cols;
       readMatrixSize(inputFilenames.at("A"),rows,cols);
       Tensor<double> x({cols}, Dense);

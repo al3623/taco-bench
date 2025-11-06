@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include "MSpM.h"
+#define max(a,b) ((a) > (b) ? a : b)
+#define min(a,b) ((a) < (b) ? a : b)
 
 void MSpM(double *MM, double *data, int *pos, int *crd0, int N, int M, int L,double*output){
 
