@@ -120,6 +120,8 @@ int main(int argc, char* argv[]) {
   ATLOperands["B"] = vector<Tensor<double>>();
   ATLOperands["C"] = vector<Tensor<double>>();
   ATLOperands["D"] = vector<Tensor<double>>();
+  ATLOperands["C_sparsity"] = vector<Tensor<double>>();
+  ATLOperands["D_sparsity"] = vector<Tensor<double>>();
   ATLOperands["ARef"] = vector<Tensor<double>>();
   ATLOperands["x"] = vector<Tensor<double>>();
   ATLOperands["x_sparsity"] = vector<Tensor<double>>();
@@ -581,8 +583,8 @@ int main(int argc, char* argv[]) {
       for (auto sparsity:Sparsities) {
         Tensor<double> Bgen({dim1,dim2,dim3},Format({Sparse,Sparse,Sparse}));
 	// ADD B AT A SPARSITY
+	util::fillTensor(Bgen,util::FillMethod::Random,sparsity);
 	ATLOperands["B" + std::to_string(sparsity)].push_back(Bgen);
-        util::fillTensor(Bgen,util::FillMethod::Random,sparsity);
 	// cout << endl << "A(i,j) = B(i,j,k)*x(k) -- Sparse,Sparse,Sparse -- "
 	//     << size << " -- " << sparsity << endl;
 	Tensor<double> A({dim1,dim2}, Format({Dense,Dense}));
@@ -606,53 +608,69 @@ int main(int argc, char* argv[]) {
   case SpMTTKRP: {
     // A(i,j) = B(i,k,l) * D(l,j) * C(k,j)
     int dim1,dim2,dim3,dim4;
+    IndexVar i, j, k, l;
+    
+    Tensor<double> B=read(inputFilenames.at("B")
+			  , Format({Sparse,Sparse,Sparse}),true);
+    cout << "B loaded"  << endl;
+    dim1= B.getDimensions()[0];
+    dim2= B.getDimensions()[1];
+    dim3= B.getDimensions()[2]; 
+    dim4= size; 
+    Tensor<double> C({dim2,dim4}, Format({Dense,Dense}));
+    Tensor<double> D({dim3,dim4}, Format({Dense,Dense}));
+    util::fillTensor(C,util::FillMethod::Dense);
+    util::fillTensor(D,util::FillMethod::Dense);
+    Tensor<double> A({dim1,dim4}, Format({Dense,Dense}));
+    // Tensor<double> B({dim1,dim2,dim3}, Format({Dense,Dense,Dense}));
+    // util::fillTensor(B,util::FillMethod::Random,0.5);
+    
+    // cout << endl
+    // << "A(i,j) = B(i,j,k)*x(k) -- Sparse,Sparse,Sparse -- DENSE" << endl;
+    auto prepareY = [&]() {
+      A(i,j) = B(i,k,l) * D(l,j) * C(k,j);
+      A.compile();
+      A.assemble();
+    };
+      
+    ATL_TIME_REPEAT(prepareY(), A.compute(), ;, ;, repeat, timevalue, true)
+      cout << "TACO NELL:\n" << timevalue << endl;
+    
+    ATLOperands["B"].push_back(B);
+    ATLOperands["A"].push_back(A);
+    ATLOperands["C"].push_back(C);
+    ATLOperands["D"].push_back(D);
+    
     dim1 = size;
     dim2 = size;
     dim3 = size;
     dim4 = size;
-    Tensor<double> ARef({dim1,dim4}, Format({Dense,Dense}));
-    Tensor<double> B({dim1,dim2,dim3}, Format({Dense,Dense,Dense}));
-    Tensor<double> C({dim3,dim4}, Format({Dense,Dense}));
-    Tensor<double> D({dim2,dim4}, Format({Dense,Dense}));
-    util::fillTensor(B,util::FillMethod::Random,0.5);
-    util::fillTensor(C,util::FillMethod::Dense);
-    util::fillTensor(D,util::FillMethod::Dense);
+    
+    Tensor<double> C_sparsity({dim2,dim4}, Format({Dense,Dense}));
+    Tensor<double> D_sparsity({dim3,dim4}, Format({Dense,Dense}));
+    util::fillTensor(C_sparsity,util::FillMethod::Dense);
+    util::fillTensor(D_sparsity,util::FillMethod::Dense);
+    
+    ATLOperands["C_sparsity"].push_back(C_sparsity);
+    ATLOperands["D_sparsity"].push_back(D_sparsity);
 
-    IndexVar i, j, k, l;
-    ARef(i,j) = B(i,k,l) * D(l,j) * C(k,j);
-    ARef.compile();
-    ARef.assemble();
-    cout << endl
-	 << "A(i,j) = B(i,k,l)*D(l,j)*C(k,j) -- Dense,Dense,Dense" << endl;
-    TACO_BENCH(ARef.compute();, "Compute",repeat, timevalue, true)
-      
-    TacoFormats.insert({"Sparse,Sparse,Sparse",
-	Format({Sparse,Sparse,Sparse})});
-      
-    for (auto& formats:TacoFormats) {
-      cout << endl
-	   << "A(i,j) = B(i,k,l)*D(l,j)*C(k,j) -- " << formats.first << endl;
-      Tensor<double> Btmp({dim1,dim2,dim3},formats.second);
-      for (auto& value : iterate<double>(B)) {
-	Btmp.insert({value.first[0],
-	    value.first[1],value.first[2]},value.second);
-      }
-      Btmp.pack();
+    for (auto& sparsity:Sparsities) {
+      Tensor<double> B({dim1,dim2,dim3}, Format({Sparse,Sparse,Sparse}));
+      util::fillTensor(B,util::FillMethod::Random,sparsity);
+      ATLOperands["B" + std::to_string(sparsity)].push_back(B);
+
       Tensor<double> A({dim1,dim4}, Format({Dense,Dense}));
+      auto prepareY = [&]() {
+	A(i,j) = B(i,k,l) * D_sparsity(l,j) * C_sparsity(k,j);
+	A.compile();
+	A.assemble();
+      };
       
-      A(i,j) = Btmp(i,k,l) * D(l,j) * C(k,j);
-      ATLOperands["B"].push_back(Btmp);
-
-      A.compile();
-      A.assemble();
-      TACO_BENCH(A.compute();, "Compute",repeat, timevalue, true)
-	
-      validate("taco", A, ARef);
+      ATL_TIME_REPEAT(prepareY(), A.compute(), ;, ;, repeat, timevalue, true)
+	cout << "TACO MTTKRP " << sparsity << ":\n" << timevalue << endl;
+      ATLOperands["A" + std::to_string(sparsity)].push_back(A);  
     }
     
-    ATLOperands["ARef"].push_back(ARef);
-    ATLOperands["C"].push_back(C);
-    ATLOperands["D"].push_back(D);
     break;
   }
     case SparsitySpMDM: {
