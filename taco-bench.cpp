@@ -251,7 +251,7 @@ int main(int argc, char* argv[]) {
   // taco Formats and sparsities
   map<string,Format> TacoFormats;
   // std::vector<double> Sparsities {0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.4,0.3,0.2,0.1,0.05,0.01,0.001};
-  std::vector<double> Sparsities {0.001,0.0001,0.00001,0.000001};
+  std::vector<double> Sparsities {/*0.001,0.0001,0.00001,*/0.000001};
 
   switch(Expr) {
   case SpMSpV: {
