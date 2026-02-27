@@ -13,8 +13,8 @@ extern "C" {
 	#include "SpMDCSC.h"
 	#include "SpMCOO.h"
 	#include "SpMBCSR.h"
-	#include "MV.h"
 	#include "TTV.h"
+	#include "SpSpTTV.h"
 	#include "MTTKRP.h"
 }
 
@@ -40,8 +40,7 @@ void myValidate(Tensor<double> t, double *t2, int n) {
 	bool success = true;
 	for (int i = 0; i < n; i++) {
 		if (fabs(t1[i] -  t2[i]) / fabs(t1[i]) > 1e-4) {
-		// if (t1[i] != t2[i]) { 
-			// fprintf(stderr,"%d: %lf <> %lf\n",i,t1[i],t2[i]);
+			fprintf(stderr,"%d: %lf <> %lf\n",i,t1[i],t2[i]);
 			success = false;
 		}	
 	}	
@@ -386,6 +385,50 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
 		      , myValidate(A,output,Bdim0*Bdim1)
 		      , repeat, timevalue, true)
 	cout << "ATL " << sparsity << ":\n" << timevalue << endl;
+    }
+    
+  } else if (Expr==SpTTV) {
+    // ARef(i,j) = B(i,j,k) * x(k)
+    Tensor<double> B = exprOperands.at("B")[0];
+    cout << "spspttv" << endl;
+    for (auto sparsity:Sparsities) {
+      Tensor<double> A = exprOperands.at("A" + std::to_string(sparsity))[0];
+      Tensor<double> x = exprOperands.at("x" + std::to_string(sparsity))[0];
+      cout << "operands retrieved" << endl;
+      
+      TensorStorage Bstor = B.getStorage();
+      struct taco_tensor_t Bstruct = *Bstor;
+      int dim1 = Bstruct.dimensions[0];
+      int dim2 = Bstruct.dimensions[1];
+      int dim3 = Bstruct.dimensions[2];
+      int *pos0 = (int *)Bstruct.indices[0][0];
+      int *crd0 = (int *)Bstruct.indices[0][1];
+      int *pos1 = (int *)Bstruct.indices[1][0];
+      int *crd1 = (int *)Bstruct.indices[1][1];
+      int *pos2 = (int *)Bstruct.indices[2][0];
+      int *crd2 = (int *)Bstruct.indices[2][1];
+      double *data = (double *)Bstruct.vals;
+
+      TensorStorage xstor = x.getStorage();
+      struct taco_tensor_t xstruct = *xstor;
+      int * x_pos = (int*)(xstruct.indices[0][0]);
+      int * x_crd = (int*)(xstruct.indices[0][1]);
+      double * x_vals = (double*)(xstruct.vals);
+
+      double *output = NULL;
+      ATL_TIME_REPEAT(output = (double *) calloc(dim1*dim2, sizeof(double))
+		      , SpSpTTV(data,x_vals,pos0,pos1,
+				pos2,x_pos,crd0,crd1,crd2,x_crd,
+				dim1,dim2,output)
+		      , free(output)
+		      , myValidate(A,output,dim1*dim2)
+		      , repeat, timevalue, true)
+	cout << "ATL " << sparsity << ":\n" << timevalue << endl;
+
+      for (auto sparsity : Sparsities) {
+	/* process various sparsities of B */
+      }
+      
     }
     
   } else if (Expr==SpMTTKRP) {

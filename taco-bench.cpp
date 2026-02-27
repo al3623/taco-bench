@@ -65,7 +65,8 @@ static void printUsageInfo() {
             "   6: SparsitySpMV  y = alpha*A^Tx + beta*z \n"
             "   7: SparsityTTV   A(i,j) = B(i,j,k) * x(k) \n"
             "   8: SparsitySpMDM C(i,j) = A(i, k) * B(k, j) \n"
-	    "   9: SpMTTKRP        A(i,j) = B(i,k,l) * D(l,j) * C(k,j) \n");
+	    "   9: SpMTTKRP        A(i,j) = B(i,k,l) * D(l,j) * C(k,j) \n"
+	    "   10: SpSpTTV      A(i,j) = B(i,j,k) * x(k) \n");
   cout << endl;
   printFlag("r=<repeat>",
             "Time compilation, assembly and <repeat> times computation "
@@ -178,6 +179,8 @@ int main(int argc, char* argv[]) {
           Expr=SparsitySpMDM;
         else if(Expression==9)
           Expr=SpMTTKRP;
+        else if(Expression==10)
+          Expr=SpTTV;
         else
           return reportError("Incorrect Expression descriptor", 3);
       }
@@ -251,10 +254,46 @@ int main(int argc, char* argv[]) {
   // taco Formats and sparsities
   map<string,Format> TacoFormats;
   // std::vector<double> Sparsities {0.95,0.9,0.85,0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.4,0.3,0.2,0.1,0.05,0.01,0.001};
-  std::vector<double> Sparsities {/*0.001,0.0001,0.00001,*/0.000001};
+  std::vector<double> Sparsities {/*0.001,0.0001,0.00001,*/0.5};
 
   switch(Expr) {
-  case SpMSpV: {
+  case SpTTV: {
+      int dim1,dim2,dim3;
+      cout << "SpSpTTV"  << endl;
+      Tensor<double> B=read(inputFilenames.at("B")
+			    , Format({Sparse,Sparse,Sparse}),true);
+      ATLOperands["B"].push_back(B);
+      dim1= B.getDimensions()[0];
+      dim2= B.getDimensions()[1];
+      dim3= B.getDimensions()[2]; 
+      cout << "B loaded"  << endl;
+      cout << dim1 << " * " << dim2 << " * " << dim3  << endl;
+
+      // THIS IS THE GENERATED Bs
+      for (auto sparsity:Sparsities) {
+	IndexVar i, j, k;
+	Tensor<double> x({dim3}, Sparse);
+	util::fillTensor(x,util::FillMethod::Random,sparsity);
+	ATLOperands["x" + std::to_string(sparsity)].push_back(x);
+
+	Tensor<double> A({dim1,dim2}, Format({Dense,Dense}));
+	auto prepareY = [&]() {
+	  A(i,j) = B(i,j,k) * x(k);
+	  A.compile();
+	  A.assemble();
+        };
+	prepareY();
+      
+	ATL_TIME_REPEAT(prepareY(), A.compute(), ;, ;, repeat, timevalue, true)
+	cout << "TACO " << sparsity << ":\n" << timevalue << endl;
+	// ADD RESULT A AT THAT SPARSITY
+	ATLOperands["A" + std::to_string(sparsity)].push_back(A);
+	// A.compile();
+	// A.assemble();
+	// TACO_BENCH(A.compute();, "Compute",repeat, timevalue, false)
+      }
+    break;
+  } case SpMSpV: {
     
     int rows,cols;
     readMatrixSize(inputFilenames.at("A"),rows,cols);
