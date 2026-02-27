@@ -19,7 +19,7 @@ using namespace std;
 
 
 // Enum of possible expressions to Benchmark
-enum BenchExpr {SpMSpV, SpMV, PLUS3, MATTRANSMUL, RESIDUAL, SDDMM, SparsitySpMV, SparsityTTV, SparsitySpMDM, SpMTTKRP};
+enum BenchExpr {SpMSpV, SpMV, PLUS3, MATTRANSMUL, RESIDUAL, SDDMM, SparsitySpMV, SparsityTTV, SparsitySpMDM, SpMTTKRP, SpTTV};
 
 // Compare two tensors of different formats
 bool compare(const Tensor<double>&Dst, const Tensor<double>&Ref) {

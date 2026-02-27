@@ -3,8 +3,8 @@
 #define max(a,b) ((a) > (b) ? a : b)
 #define min(a,b) ((a) < (b) ? a : b)
 
-void MTTKRP(double *data, double *BB, double *CC, int *pos0, int *pos1, int *CRD1, int *CRD2, int *CRD, int *pos, int S,double*output){
-for (int H51 = 0; H51 < pos[1] - (pos[0]); H51++) {
+void MTTKRP(double *data, double *BB, double *CC, int *pos0, int *pos1, int *crd2, int *crd3, int *CRD2, int *pos, int S,double*output){
+for (int H51 = 0; H51 < pos[1]; H51++) {
 for (int H52 = pos0[H51]; H52 < pos0[H51 + 1]; H52++) {
 for (int H53 = pos1[H52]; H53 < pos1[H52 + 1]; H53++) {
 
@@ -14,8 +14,8 @@ double tmp3 = 0;
 tmp3 = BB[(((S)) * (CRD2[H53])) + H54];
 tmp2 = data[H53] * tmp3;
 double tmp4 = 0;
-tmp4 = CC[(((S)) * (CRD1[H52])) + H54];
-output[(S) * (CRD[H51]) + H54] += tmp2 * tmp4;
+tmp4 = CC[(((S)) * (crd3[H52])) + H54];
+output[(S) * (crd2[H51]) + H54] += tmp2 * tmp4;
 }
 }
 }
