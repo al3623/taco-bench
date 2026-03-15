@@ -336,6 +336,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
     
   } else if (Expr==SpMTTKRP) {
     // A(i,j) = B(i,k,l) * D(l,j) * C(k,j)
+    cout << "MTTKRP" << endl;
     Tensor<double> A = exprOperands.at("A")[0];
     Tensor<double> B = exprOperands.at("B")[0];
     Tensor<double> C = exprOperands.at("C")[0];
@@ -351,10 +352,8 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
     TensorStorage Bstor = B.getStorage();
     struct taco_tensor_t Bstruct = *Bstor;
     
-    int dim0 = Bstruct.dimensions[0];
-    int dim1 = Bstruct.dimensions[1];
-    int dim2 = Bstruct.dimensions[2];
     int dim3 = dstruct.dimensions[1];
+    int dim0 = Bstruct.dimensions[0];
 
     int *pos0 = (int *)Bstruct.indices[0][0];
     int *crd0 = (int *)Bstruct.indices[0][1];
@@ -366,13 +365,13 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
     
     double *output;
     ATL_TIME_REPEAT(output = (double *) calloc(dim0*dim3, sizeof(double))
-		    , MTTKRP(data,dvals,cvals,pos1,pos2,crd1,crd2,
-			     crd0,pos0,dim3,output)
+		    , MTTKRP(data,dvals,cvals,pos1,pos2,crd0,crd1,
+			     crd2,pos0,dim3,output)
 		    , free(output)
 		    , myValidate(A,output,dim0*dim3)
 		    , repeat, timevalue, true)
       cout << "ATL NELL:\n" << timevalue << endl;
-    
+
     for (auto sparsity : Sparsities) {
       Tensor<double> A = exprOperands.at("A" + std::to_string(sparsity))[0];
       Tensor<double> B = exprOperands.at("B" + std::to_string(sparsity))[0];
@@ -404,11 +403,11 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
     
       double *output;
       ATL_TIME_REPEAT(output = (double *) calloc(dim0*dim3, sizeof(double))
-		      , MTTKRP(data,dvals,cvals,pos1,pos2,crd1,crd2,
-			       crd0,pos0,dim3,output)
-		      , free(output)
-		      , myValidate(A,output,dim0*dim3)
-		      , repeat, timevalue, true)
+		    , MTTKRP(data,dvals,cvals,pos1,pos2,crd0,crd1,
+			     crd2,pos0,dim3,output)
+		    , free(output)
+		    , myValidate(A,output,dim0*dim3)
+		    , repeat, timevalue, true)
 	cout << "ATL MTTKRP " << sparsity << ":\n" << timevalue << endl;
     }
   } else {
