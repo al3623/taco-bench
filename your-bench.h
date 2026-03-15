@@ -394,7 +394,7 @@ v			TACO_BENCH(SpMCOO(vvals,data,crd0,crd1,pos,mdim0,output);,
     for (auto sparsity:Sparsities) {
       Tensor<double> A = exprOperands.at("A" + std::to_string(sparsity))[0];
       Tensor<double> x = exprOperands.at("x" + std::to_string(sparsity))[0];
-      cout << "operands retrieved" << endl;
+      // cout << "operands retrieved" << endl;
       
       TensorStorage Bstor = B.getStorage();
       struct taco_tensor_t Bstruct = *Bstor;
