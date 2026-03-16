@@ -35,6 +35,12 @@ extern "C" {
     RES = timer.getResult();                         \
   }
 
+void zero(double *buf, int n) {
+  for (int i = 0; i < n; ++i) {
+    buf[i] = 0.0;
+  }
+}
+
 void myValidate(Tensor<double> t, double *t2, int n) {
   double *t1 = (double *) (*t.getStorage()).vals;
   bool success = true;
@@ -248,7 +254,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 
     
     ATL_TIME_REPEAT(output = (double *) calloc(Bdim0*Bdim1, sizeof(double))
-		    , TTV(data,xvals,pos0,pos1,
+		    , zero(output,Bdim0*Bdim1); TTV(data,xvals,pos0,pos1,
 			  pos2,crd2,crd1,crd0,Bdim1,Bdim0,output)
 		    , free(output)
 		    , myValidate(ARef,output,Bdim0*Bdim1)
@@ -282,7 +288,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
       
       
       ATL_TIME_REPEAT(output = (double *) calloc(Bdim0*Bdim1, sizeof(double))
-		      , TTV(data,xvals,pos0,pos1,
+		      , zero(output,Bdim0*Bdim1); TTV(data,xvals,pos0,pos1,
 			    pos2,crd2,crd1,crd0,Bdim1,Bdim0,output)
 		      , free(output)
 		      , myValidate(A,output,Bdim0*Bdim1)
@@ -327,10 +333,6 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 		      , myValidate(A,output,dim1*dim2)
 		      , repeat, timevalue, true)
 	cout << "ATL " << sparsity << ":\n" << timevalue << endl;
-
-      for (auto sparsity : Sparsities) {
-	/* process various sparsities of B */
-      }
       
     }
     
@@ -365,7 +367,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
     
     double *output;
     ATL_TIME_REPEAT(output = (double *) calloc(dim0*dim3, sizeof(double))
-		    , MTTKRP(data,dvals,cvals,pos1,pos2,crd0,crd1,
+		    , zero(output,dim0*dim3); MTTKRP(data,dvals,cvals,pos1,pos2,crd0,crd1,
 			     crd2,pos0,dim3,output)
 		    , free(output)
 		    , myValidate(A,output,dim0*dim3)
@@ -403,7 +405,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
     
       double *output;
       ATL_TIME_REPEAT(output = (double *) calloc(dim0*dim3, sizeof(double))
-		    , MTTKRP(data,dvals,cvals,pos1,pos2,crd0,crd1,
+		      , zero(output,dim0*dim3); MTTKRP(data,dvals,cvals,pos1,pos2,crd0,crd1,
 			     crd2,pos0,dim3,output)
 		    , free(output)
 		    , myValidate(A,output,dim0*dim3)

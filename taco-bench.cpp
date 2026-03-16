@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
   ATLOperands["x_sparsity"] = vector<Tensor<double>>();
   ATLOperands["yRef"] = vector<Tensor<double>>();
   int repeat=1;
-  int size = 100;
+  int size = 1000;
   map<string,string> inputFilenames;
   taco::util::TimeResults timevalue;
   map<string,bool> products;
@@ -644,9 +644,10 @@ int main(int argc, char* argv[]) {
     }
   case SpMTTKRP: {
     // A(i,j) = B(i,k,l) * D(l,j) * C(k,j)
+    int size = 1000;
     int dim1,dim2,dim3,dim4;
     IndexVar i, j, k, l;
-    
+
     Tensor<double> B=read(inputFilenames.at("B")
 			  , Format({Sparse,Sparse,Sparse}),true);
     cout << "B loaded"  << endl;
