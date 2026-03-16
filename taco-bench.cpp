@@ -288,11 +288,7 @@ int main(int argc, char* argv[]) {
       
 	ATL_TIME_REPEAT(prepareY(), A.compute(), ;, ;, repeat, timevalue, true)
 	cout << "TACO " << sparsity << ":\n" << timevalue << endl;
-	// ADD RESULT A AT THAT SPARSITY
 	ATLOperands["A" + std::to_string(sparsity)].push_back(A);
-	// A.compile();
-	// A.assemble();
-	// TACO_BENCH(A.compute();, "Compute",repeat, timevalue, false)
       }
     break;
   } case SpMSpV: {
@@ -314,7 +310,7 @@ int main(int argc, char* argv[]) {
       cout << "SpMSpV " << sparsity << endl;
       TACO_BENCH(y.compute();, "Compute",repeat, timevalue, true)
       ATLOperands["y" + std::to_string(sparsity)].push_back(y);
-      } 
+    } 
     break;
   } case SpMV: {
       int rows,cols;
@@ -331,11 +327,11 @@ int main(int argc, char* argv[]) {
       ATLOperands["yRef"].push_back(yRef);
       ATLOperands["x"].push_back(x);
       
-      TacoFormats.insert({"CSR",CSR});
-      TacoFormats.insert({"CSC",CSC});
-      TacoFormats.insert({"DCSR",DCSR});
-      TacoFormats.insert({"DCSC",DCSC});
-      TacoFormats.insert({"COO",COO(2)});
+      // TacoFormats.insert({"CSR",CSR});
+      // TacoFormats.insert({"CSC",CSC});
+      // TacoFormats.insert({"DCSR",DCSR});
+      // TacoFormats.insert({"DCSC",DCSC});
+      // TacoFormats.insert({"COO",COO(2)});
       
       for (auto& formats:TacoFormats) {
         // cout << endl << "y(i) = A(i,j)*x(j) -- " << formats.first <<endl;

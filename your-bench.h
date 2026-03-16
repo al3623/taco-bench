@@ -165,7 +165,6 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 	      cout << "ATL COO\n" << timevalue << endl;
       } else /* Gotta be BCSR */ {
 	// let's try BCSR
-	// Pad to the next multiple of blockSize1 and blockSize2 for the respective dimension
 	int blockSize1 = 2;
 	int blockSize2 = 4;
 	TensorStorage mstor = m.getStorage();
@@ -328,7 +327,7 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
       ATL_TIME_REPEAT(output = (double *) calloc(dim1*dim2, sizeof(double))
 		      , SpSpTTV(data,x_vals,pos0,pos1,
 				pos2,x_pos,crd0,crd1,crd2,x_crd,
-				dim1,dim2,output)
+				dim2,dim1,output)
 		      , free(output)
 		      , myValidate(A,output,dim1*dim2)
 		      , repeat, timevalue, true)
