@@ -11,7 +11,7 @@ libsparse.a: $(OBJECTS)
 	ranlib $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -O3 -fopenmp -c $^ -o $@
+	$(CC) $(CFLAGS) -O3 -c $^ -o $@
 
 .PHONY: clean scrub
 
@@ -19,4 +19,4 @@ scrub:
 	./cleanoutput.sh $(GENFILE)
 
 clean:
-	rm -f *.o a.out core main *.a *.c *.h *.BAK
+	rm -f *.o a.out core main *.a *.BAK
