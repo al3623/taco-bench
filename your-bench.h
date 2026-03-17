@@ -41,20 +41,6 @@ void zero(double *buf, int n) {
   }
 }
 
-void myValidate(Tensor<double> t, double *t2, int n) {
-  double *t1 = (double *) (*t.getStorage()).vals;
-  bool success = true;
-  for (int i = 0; i < n; i++) {
-    if (fabs(t1[i] -  t2[i]) / fabs(t1[i]) > 1e-2) {
-      // fprintf(stderr,"%d: %lf <> %lf\n",i,t1[i],t2[i]);
-      success = false;
-    }	
-  }	
-  if (!success) {
-    fprintf(stdout,"failed :(\n");
-  }
-}
-
 void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,std::vector<double> Sparsities,int repeat, taco::util::TimeResults timevalue) {
 
   if (Expr==SpMV) {
@@ -164,9 +150,6 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 			    , repeat, timevalue, true)
 	      cout << "ATL COO\n" << timevalue << endl;
       } else /* Gotta be BCSR */ {
-	// let's try BCSR
-	int blockSize1 = 2;
-	int blockSize2 = 4;
 	TensorStorage mstor = m.getStorage();
 	struct taco_tensor_t mstruct = *mstor;
 	
@@ -176,16 +159,21 @@ void exprToYOUR(BenchExpr Expr, map<string,vector<Tensor<double>>> exprOperands,
 	int mdim3 = mstruct.dimensions[3];
 	int rows = mdim0*mdim2;
 	int cols = mdim1*mdim3;
-	cout << mdim0 << "*" << mdim1 << "*" << mdim2 << "*" << mdim3 << endl;
-	
+	// cout << mdim0 << "*" << mdim1 << "*" << mdim2 << "*" << mdim3 << endl;
+
 	int *pos = (int *)mstruct.indices[1][0];
 	int *crd = (int *)mstruct.indices[1][1];
 	double *data = (double *)mstruct.vals;
 	double *output;
-	
+
+	v = exprOperands.at("xb")[0];
+	vstor = v.getStorage();
+	vstruct = *vstor;
+	vvals = (double *)vstruct.vals;
+
 	ATL_TIME_REPEAT(output = (double *) calloc(rows, sizeof(double))
 			,SpMBCSR(data,vvals,crd,pos,cols,rows,
-				 blockSize1,blockSize2,output)
+				 mdim2,mdim3,output)
 			, free(output)
 			, myValidate(out,output,rows)
 			, repeat, timevalue, true)

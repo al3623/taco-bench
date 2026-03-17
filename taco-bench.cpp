@@ -111,7 +111,6 @@ static void readMatrixSize(string filename, int& rows, int& cols)
   file.close();
 }
 
-
 int main(int argc, char* argv[]) {
 
   int Expression=1;
@@ -319,6 +318,8 @@ int main(int argc, char* argv[]) {
       util::fillTensor(x,util::FillMethod::Dense);
       Tensor<double> yRef({rows}, Dense);
       Tensor<double> A=read(inputFilenames.at("A"),CSR,true);
+      clamp(A);
+      
       IndexVar i, j;
       yRef(i) = A(i,j) * x(j);
       yRef.compile();
@@ -327,15 +328,16 @@ int main(int argc, char* argv[]) {
       ATLOperands["yRef"].push_back(yRef);
       ATLOperands["x"].push_back(x);
       
-      // TacoFormats.insert({"CSR",CSR});
-      // TacoFormats.insert({"CSC",CSC});
-      // TacoFormats.insert({"DCSR",DCSR});
-      // TacoFormats.insert({"DCSC",DCSC});
-      // TacoFormats.insert({"COO",COO(2)});
+      TacoFormats.insert({"CSR",CSR});
+      TacoFormats.insert({"CSC",CSC});
+      TacoFormats.insert({"DCSR",DCSR});
+      TacoFormats.insert({"DCSC",DCSC});
+      TacoFormats.insert({"COO",COO(2)});
       
       for (auto& formats:TacoFormats) {
         // cout << endl << "y(i) = A(i,j)*x(j) -- " << formats.first <<endl;
         Tensor<double> A=read(inputFilenames.at("A"),formats.second,true);
+	clamp(A);
 	ATLOperands["A"].push_back(A);
         Tensor<double> y({rows}, Dense);
 
@@ -345,19 +347,21 @@ int main(int argc, char* argv[]) {
             y.assemble();
         };
         prepareY();
-	ATL_TIME_REPEAT(;, y.compute(), prepareY(), ;, repeat, timevalue, true)
+	ATL_TIME_REPEAT(;, y.compute(), , ;, repeat, timevalue, true)
 	  cout << "Taco " << formats.first << endl << timevalue << endl;
       }
 
       { // Just do BCSR
 	Tensor<double> A=read(inputFilenames.at("A"),{Dense,Sparse},true);
+	clamp(A);
+	
 	int blockSize1 = 2;
 	int blockSize2 = 4;
-	cout << A.getDimension(0)<< "*" << A.getDimension(1) << endl;
+	// cout << A.getDimension(0)<< "*" << A.getDimension(1) << endl;
 	// Pad to the next multiple of blockSize1 and blockSize2 for the respective dimension
-	int rows = ((A.getDimension(0) + blockSize1 - 1) / blockSize1) * blockSize1;
-	int cols = ((A.getDimension(1) + blockSize2 - 1) / blockSize2) * blockSize2;
-
+	int rows = ((A.getDimension(0)+blockSize1-1)/blockSize1)*blockSize1;
+	int cols = ((A.getDimension(1)+blockSize2-1)/blockSize2)*blockSize2;
+	
 	Tensor<double>Ab({rows/blockSize1,cols/blockSize2,blockSize1,blockSize2}
 	,Format({Dense,Sparse,Dense,Dense}));
 	for (auto& value : iterate<double>(A)) {
@@ -377,7 +381,7 @@ int main(int argc, char* argv[]) {
 	, value.second);
 	}
 	xb.pack();
-	
+
 	Tensor<double> y({rows/blockSize1,blockSize1}
 	, Format({Dense,Dense}));
 	IndexVar io, ii, jo, ji;
@@ -386,11 +390,18 @@ int main(int argc, char* argv[]) {
 	  y.compile();
 	  y.assemble();
 	};
-	prepareY();
-        ATL_TIME_REPEAT(;, y.compute(), prepareY(), ;, repeat, timevalue, true)
+	prepareY();	
+        ATL_TIME_REPEAT(;, y.compute(), ;,
+			myValidate(yRef
+				   ,(double *)y.getStorage().getValues().getData()
+				   ,yRef.getStorage().getValues().getSize()),
+			repeat, timevalue, true)
 	  cout << "Taco BCSR" << endl << timevalue << endl;
+
+	ATLOperands["yb"].push_back(y);
+	ATLOperands["xb"].push_back(xb);
       }
-      
+	
       break;
     }
     case PLUS3: {

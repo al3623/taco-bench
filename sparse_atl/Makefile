@@ -11,7 +11,7 @@ libsparse.a: $(OBJECTS)
 	ranlib $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -O3 -c $^ -o $@
+	$(CC) $(CFLAGS) -O3 -ffast-math -c $^ -o $@
 
 .PHONY: clean scrub
 

@@ -53,7 +53,6 @@ bool compare(const Tensor<double>&Dst, const Tensor<double>&Ref) {
 }
 
 void validate (string name, const Tensor<double>& Dst, const Tensor<double>& Ref) {
-/*
   if (Dst.getFormat()==Ref.getFormat()) {
     if (!equals (Dst, Ref))
       cout << "\033[1;31m  Validation Error with " << name << " \033[0m" << endl;
@@ -62,5 +61,35 @@ void validate (string name, const Tensor<double>& Dst, const Tensor<double>& Ref
     if (!compare(Dst,Ref))
       cout << "\033[1;31m  Validation Error with " << name << " \033[0m" << endl;
   }
-*/
 }
+
+void myValidate(Tensor<double> t, double *t2, int n) {
+  double *t1 = (double *) (*t.getStorage()).vals;
+  bool success = true;
+  int eq = 0;
+  for (int i = 0; i < n; i++) {
+    if (fabs(t1[i] -  t2[i]) / fabs(t1[i]) > 1e-4) {
+      // fprintf(stderr,"%d: %lf <> %lf\n",i,t1[i],t2[i]);
+      // fprintf(stderr,"%d ",i);
+      success = false;
+    } else {
+      // fprintf(stderr,"%d: %lf == %lf\n",i,t1[i],t2[i]);
+      eq++;
+    }
+  }	
+  if (!success) {
+    fprintf(stdout,"failed :(\n");
+    fprintf(stdout,"eq: %d\n", eq);
+  }
+}
+
+void clamp(Tensor<double> &A) {
+  double *vals = (double *)A.getStorage().getValues().getData();
+  size_t nnz = A.getStorage().getValues().getSize();
+  double threshhold = 1e-6;
+  for (size_t k = 0; k < nnz; k++) {
+    if (fabs(vals[k]) < threshhold) {
+      vals[k] = threshhold;
+    }
+  }
+}      
