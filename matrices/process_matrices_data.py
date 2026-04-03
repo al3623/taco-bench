@@ -58,6 +58,10 @@ if __name__ == "__main__":
     result = process_files(directory)
 
     for fmt, matrix_map in result.items():
-        print(f"\nFormat: {fmt}")
-        for matrix, values in matrix_map.items():
-            print(f"  {matrix}: {values}")
+        with open(f"{fmt}.csv","w") as F:
+            print(f"\nFormat: {fmt}")
+            print("Matrix, TACO, ATL, TACO/ATL")
+            F.write("Matrix, TACO, ATL, TACO/ATL\n")
+            for matrix, (t,a,r) in matrix_map.items():
+                print(f"{matrix}, {t}, {a}, {r}")
+                F.write(f"{matrix}, {t}, {a}, {r}\n")

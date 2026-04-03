@@ -62,6 +62,10 @@ if __name__ == "__main__":
     result = process_files(directory)
 
     for fmt, tensor_map in result.items():
-        print(f"Kernel: {fmt}")
-        for tensor, values in tensor_map.items():
-            print(f"  {tensor}: {values}")
+        with open(f"{fmt}.csv","w") as F:
+            print(f"Kernel: {fmt}")
+            print("Tensor/Sparsity, TACO, ATL, TACO/ATL")
+            F.write("Tensor/Sparsity, TACO, ATL, TACO/ATL\n")
+            for tensor, (t,a,r) in tensor_map.items():
+                print(f"{tensor}, {t}, {a}, {r}")
+                F.write(f"{tensor}, {t}, {a}, {r}\n")

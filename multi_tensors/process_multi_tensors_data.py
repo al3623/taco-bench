@@ -8,7 +8,7 @@ def process_files(directory):
 
     for filepath in glob.glob(os.path.join(directory, "*.txt")):
         filename = os.path.basename(filepath)
-        tensor_name = filename.replace(".txt", "")
+        tensor_name = filename.replace(".tns.txt", "")
         
         with open(filepath, "r") as f:
             lines = [line.strip() for line in f if line.strip()]
@@ -66,7 +66,11 @@ if __name__ == "__main__":
     directory = "./"  # change this
     result = process_files(directory)
 
-    for fmt, tensor_map in result.items():
-        print(f"Tensor: {fmt}")
-        for sparsity, values in tensor_map.items():
-            print(f"  {sparsity}: {values}")
+    for tensor, sparsity_map in result.items():
+        with open(f"{tensor}.csv","w") as F:
+            print(f"Tensor: {tensor}")
+            print("Sparsity, TACO, ATL, TACO/ATL")
+            F.write("Sparsity, TACO, ATL, TACO/ATL\n")
+            for sparsity, (t,a,r) in sparsity_map.items():
+                print(f"{sparsity}, {t}, {a}, {r}")
+                F.write(f"{sparsity}, {t}, {a}, {r}\n")
