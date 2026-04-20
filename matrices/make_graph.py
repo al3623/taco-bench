@@ -31,7 +31,6 @@ def process_files(directory):
         plt.axhline(1.0, linestyle="-",color=(0, 176/255, 80/255))
         plt.title(format_name, fontsize=14)
         
-
         plt.tight_layout()
         plt.savefig(format_name + ".pdf")
 
